@@ -33,6 +33,7 @@ import (
 	"github.com/ethereum/go-ethereum/core/vm"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/params"
+	"github.com/ethereum/go-ethereum/trie"
 	"github.com/holiman/uint256"
 )
 
@@ -85,6 +86,9 @@ type generateParams struct {
 	withdrawals types.Withdrawals // List of withdrawals to include in block (shanghai field)
 	beaconRoot  *common.Hash      // The beacon root (cancun field).
 	noTxs       bool              // Flag whether an empty block without any transaction is expected
+
+	// goat txs from cosmos
+	txs types.Transactions
 }
 
 // generateWork generates a sealing block based on the given parameters.
@@ -111,8 +115,41 @@ func (miner *Miner) generateWork(params *generateParams) *newPayloadResult {
 	for _, r := range work.receipts {
 		allLogs = append(allLogs, r.Logs...)
 	}
+
+	var gasFees = new(big.Int)
+	if miner.chainConfig.Goat != nil {
+		// calculate the reward
+		burntFees := new(big.Int)
+		if work.header.BaseFee != nil && work.header.GasUsed > 0 {
+			gasUsed := new(big.Int).SetUint64(work.header.GasUsed)
+			burntFees.Mul(work.header.BaseFee, gasUsed)
+		}
+
+		if work.header.ExcessBlobGas != nil && work.header.BlobGasUsed != nil && *work.header.BlobGasUsed > 0 {
+			blobBaseFee := eip4844.CalcBlobFee(*work.header.ExcessBlobGas)
+			blobUsed := new(big.Int).SetUint64(*work.header.BlobGasUsed)
+			burntFees.Add(burntFees, blobUsed.Mul(blobUsed, blobBaseFee))
+		}
+
+		gasFees.Add(gasFees, burntFees)
+		for i, tx := range work.txs {
+			gasUsed := work.receipts[i].GasUsed
+			if gasUsed == 0 { // It's the goat tx
+				continue
+			}
+			minerFee, _ := tx.EffectiveGasTip(work.header.BaseFee)
+			gasFees.Add(gasFees, new(big.Int).Mul(new(big.Int).SetUint64(gasUsed), minerFee))
+		}
+		gasRevenue := core.ProcessGoatFoundationReward(work.state, gasFees)
+		requests, err := core.ProcessGoatRequests(gasRevenue, allLogs, miner.chainConfig)
+		if err != nil {
+			return &newPayloadResult{err: err}
+		}
+		body.Requests = requests
+	}
+
 	// Read requests if Prague is enabled.
-	if miner.chainConfig.IsPrague(work.header.Number, work.header.Time) {
+	if miner.chainConfig.Goat == nil && miner.chainConfig.IsPrague(work.header.Number, work.header.Time) {
 		requests, err := core.ParseDepositLogs(allLogs, miner.chainConfig)
 		if err != nil {
 			return &newPayloadResult{err: err}
@@ -123,9 +160,14 @@ func (miner *Miner) generateWork(params *generateParams) *newPayloadResult {
 	if err != nil {
 		return &newPayloadResult{err: err}
 	}
+
+	if miner.chainConfig.Goat == nil {
+		gasFees = totalFees(block, work.receipts)
+	}
+
 	return &newPayloadResult{
 		block:    block,
-		fees:     totalFees(block, work.receipts),
+		fees:     gasFees,
 		sidecars: work.sidecars,
 		stateDB:  work.state,
 		receipts: work.receipts,
@@ -165,10 +207,20 @@ func (miner *Miner) prepareWork(genParams *generateParams) (*environment, error)
 		Time:       timestamp,
 		Coinbase:   genParams.coinbase,
 	}
-	// Set the extra field.
-	if len(miner.config.ExtraData) != 0 {
-		header.Extra = miner.config.ExtraData
+
+	if miner.chainConfig.Goat != nil {
+		// Set the extra field.
+		header.Extra = make([]byte, 0, params.GoatHeaderExtraLengthV0)
+		header.Extra = append(header.Extra, uint8(len(genParams.txs)))
+		header.Extra = append(header.Extra,
+			types.DeriveSha(genParams.txs, trie.NewStackTrie(nil)).Bytes()...)
+	} else {
+		// Set the extra field.
+		if len(miner.config.ExtraData) != 0 {
+			header.Extra = miner.config.ExtraData
+		}
 	}
+
 	// Set the randomness field from the beacon chain if it's available.
 	if genParams.random != (common.Hash{}) {
 		header.MixDigest = genParams.random
@@ -218,6 +270,19 @@ func (miner *Miner) prepareWork(genParams *generateParams) (*environment, error)
 		vmenv := vm.NewEVM(context, vm.TxContext{}, env.state, miner.chainConfig, vm.Config{})
 		core.ProcessParentBlockHash(header.ParentHash, vmenv, env.state)
 	}
+
+	// add goat txs
+	if env.gasPool == nil {
+		env.gasPool = new(core.GasPool).AddGas(header.GasLimit)
+	}
+	for _, tx := range genParams.txs {
+		env.state.SetTxContext(tx.Hash(), env.tcount)
+		err = miner.commitTransaction(env, tx)
+		if err != nil {
+			return nil, fmt.Errorf("failed to commit goat tx: %s, nonce: %v, err: %w", tx.Hash(), tx.Nonce(), err)
+		}
+	}
+
 	return env, nil
 }
 

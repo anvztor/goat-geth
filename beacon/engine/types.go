@@ -48,6 +48,8 @@ type PayloadAttributes struct {
 	SuggestedFeeRecipient common.Address      `json:"suggestedFeeRecipient" gencodec:"required"`
 	Withdrawals           []*types.Withdrawal `json:"withdrawals"`
 	BeaconRoot            *common.Hash        `json:"parentBeaconBlockRoot"`
+
+	GoatTxs []hexutil.Bytes `json:"goatTxs,omitempty"  gencodec:"optional"`
 }
 
 // JSON type overrides for PayloadAttributes.
@@ -78,6 +80,14 @@ type ExecutableData struct {
 	ExcessBlobGas    *uint64                 `json:"excessBlobGas"`
 	Deposits         types.Deposits          `json:"depositRequests"`
 	ExecutionWitness *types.ExecutionWitness `json:"executionWitness,omitempty"`
+
+	// goat requests
+	GasRevenues       types.GasRevenues       `json:"gasRevenueRequests"`
+	AddVoters         types.AddVoters         `json:"addVoterRequests"`
+	RemoveVoters      types.RemoveVoters      `json:"removeVoterRequests"`
+	BridgeWithdrawals types.BridgeWithdrawals `json:"bridgeWithdrawalsRequests"`
+	ReplaceByFees     types.ReplaceByFees     `json:"rbfRequests"`
+	Cancel1s          types.Cancel1s          `json:"cancel1Requests"`
 }
 
 // JSON type overrides for executableData.
@@ -242,6 +252,32 @@ func ExecutableDataToBlock(data ExecutableData, versionedHashes []common.Hash, b
 		for _, d := range data.Deposits {
 			requests = append(requests, types.NewRequest(d))
 		}
+	}
+
+	if data.GasRevenues != nil {
+		// we always have a GasRevenue request
+		if l := len(data.GasRevenues); l != 1 {
+			return nil, fmt.Errorf("invalid GasRevenues length expect 1 got %d", l)
+		}
+		requests = append(requests, types.NewRequest(data.GasRevenues[0]))
+	}
+	if data.AddVoters != nil {
+		requests = append(requests, data.AddVoters.Requests()...)
+	}
+	if data.RemoveVoters != nil {
+		requests = append(requests, data.RemoveVoters.Requests()...)
+	}
+	if data.BridgeWithdrawals != nil {
+		requests = append(requests, data.BridgeWithdrawals.Requests()...)
+	}
+	if data.ReplaceByFees != nil {
+		requests = append(requests, data.ReplaceByFees.Requests()...)
+	}
+	if data.Cancel1s != nil {
+		requests = append(requests, data.Cancel1s.Requests()...)
+	}
+
+	if requests != nil {
 		h := types.DeriveSha(requests, trie.NewStackTrie(nil))
 		requestsHash = &h
 	}
@@ -322,10 +358,32 @@ func setRequests(requests types.Requests, data *ExecutableData) {
 		// If requests is non-nil, it means deposits are available in block and we
 		// should return an empty slice instead of nil if there are no deposits.
 		data.Deposits = make(types.Deposits, 0)
+
+		data.GasRevenues = make(types.GasRevenues, 0)
+		data.AddVoters = make(types.AddVoters, 0)
+		data.RemoveVoters = make(types.RemoveVoters, 0)
+		data.BridgeWithdrawals = make(types.BridgeWithdrawals, 0)
+		data.ReplaceByFees = make(types.ReplaceByFees, 0)
+		data.Cancel1s = make(types.Cancel1s, 0)
 	}
 	for _, r := range requests {
-		if d, ok := r.Inner().(*types.Deposit); ok {
-			data.Deposits = append(data.Deposits, d)
+		switch v := r.Inner().(type) {
+		case *types.Deposit:
+			data.Deposits = append(data.Deposits, v)
+
+		// goat types
+		case *types.GasRevenue:
+			data.GasRevenues = append(data.GasRevenues, v)
+		case *types.AddVoter:
+			data.AddVoters = append(data.AddVoters, v)
+		case *types.RemoveVoter:
+			data.RemoveVoters = append(data.RemoveVoters, v)
+		case *types.BridgeWithdrawal:
+			data.BridgeWithdrawals = append(data.BridgeWithdrawals, v)
+		case *types.ReplaceByFee:
+			data.ReplaceByFees = append(data.ReplaceByFees, v)
+		case *types.Cancel1:
+			data.Cancel1s = append(data.Cancel1s, v)
 		}
 	}
 }
@@ -335,6 +393,14 @@ type ExecutionPayloadBody struct {
 	TransactionData []hexutil.Bytes     `json:"transactions"`
 	Withdrawals     []*types.Withdrawal `json:"withdrawals"`
 	Deposits        types.Deposits      `json:"depositRequests"`
+
+	// goat requests
+	GasRevenues       types.GasRevenues       `json:"gasRevenuesRequest"`
+	AddVoters         types.AddVoters         `json:"addVoterRequests"`
+	RemoveVoters      types.RemoveVoters      `json:"removeVoterRequests"`
+	BridgeWithdrawals types.BridgeWithdrawals `json:"bridgeWithdrawalsRequests"`
+	ReplaceByFees     types.ReplaceByFees     `json:"rbfRequests"`
+	Cancel1s          types.Cancel1s          `json:"cancel1Requests"`
 }
 
 // Client identifiers to support ClientVersionV1.
