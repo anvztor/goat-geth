@@ -20,6 +20,7 @@ package catalyst
 import (
 	"errors"
 	"fmt"
+	"math/big"
 	"strconv"
 	"sync"
 	"time"
@@ -435,6 +436,23 @@ func (api *ConsensusAPI) forkchoiceUpdated(update engine.ForkchoiceStateV1, payl
 	// sealed by the beacon client. The payload will be requested later, and we
 	// will replace it arbitrarily many times in between.
 	if payloadAttributes != nil {
+		// goat
+		if d := len(payloadAttributes.GoatTxs); d > params.GoatTxLimitPerBlock {
+			return engine.STATUS_INVALID, fmt.Errorf("goat tx size too large(size %d)", d)
+		}
+
+		goatTxs := make([]*types.Transaction, 0, len(payloadAttributes.GoatTxs))
+		for i, otx := range payloadAttributes.GoatTxs {
+			var tx = new(types.Transaction)
+			if err := tx.UnmarshalBinary(otx); err != nil {
+				return engine.STATUS_INVALID, fmt.Errorf("not a valid transaction %d: %v", i, err)
+			}
+			if !tx.IsGoatTx() {
+				return engine.STATUS_INVALID, fmt.Errorf("not a goat tx %d", i)
+			}
+			goatTxs = append(goatTxs, tx)
+		}
+
 		args := &miner.BuildPayloadArgs{
 			Parent:       update.HeadBlockHash,
 			Timestamp:    payloadAttributes.Timestamp,
@@ -443,6 +461,8 @@ func (api *ConsensusAPI) forkchoiceUpdated(update engine.ForkchoiceStateV1, payl
 			Withdrawals:  payloadAttributes.Withdrawals,
 			BeaconRoot:   payloadAttributes.BeaconRoot,
 			Version:      payloadVersion,
+
+			GoatTxs: goatTxs,
 		}
 		id := args.Id()
 		// If we already are busy generating this work, then we do not need
@@ -825,6 +845,12 @@ func (api *ConsensusAPI) newPayload(params engine.ExecutableData, versionedHashe
 		if params.ExcessBlobGas != nil {
 			ebg = strconv.Itoa(int(*params.ExcessBlobGas))
 		}
+
+		var gasRevenue *big.Int
+		if len(params.GasRevenues) == 1 {
+			gasRevenue = params.GasRevenues[0].Amount
+		}
+
 		log.Warn("Invalid NewPayload params",
 			"params.Number", params.Number,
 			"params.ParentHash", params.ParentHash,
@@ -840,9 +866,16 @@ func (api *ConsensusAPI) newPayload(params engine.ExecutableData, versionedHashe
 			"params.BaseFeePerGas", params.BaseFeePerGas,
 			"params.BlobGasUsed", bgu,
 			"params.ExcessBlobGas", ebg,
+			"params.GasRevenues", gasRevenue,
 			"len(params.Transactions)", len(params.Transactions),
 			"len(params.Withdrawals)", len(params.Withdrawals),
 			"len(params.Deposits)", len(params.Deposits),
+			"len(params.GasRevenues)", len(params.GasRevenues),
+			"len(params.AddVoters)", len(params.AddVoters),
+			"len(params.RemoveVoters)", len(params.RemoveVoters),
+			"len(params.BridgeWithdrawals)", len(params.BridgeWithdrawals),
+			"len(params.ReplaceByFees)", len(params.ReplaceByFees),
+			"len(params.Cancel1s)", len(params.Cancel1s),
 			"beaconRoot", beaconRoot,
 			"error", err)
 		return api.invalid(err, nil), nil
@@ -1261,6 +1294,13 @@ func getBody(block *types.Block) *engine.ExecutionPayloadBody {
 		txs             = make([]hexutil.Bytes, len(body.Transactions))
 		withdrawals     = body.Withdrawals
 		depositRequests types.Deposits
+
+		gasRevenueRequests       types.GasRevenues
+		addVoterRequests         types.AddVoters
+		removeVoterRequests      types.RemoveVoters
+		bridgeWithdrawalRequests types.BridgeWithdrawals
+		replaceByFeeRequests     types.ReplaceByFees
+		cancel1Requests          types.Cancel1s
 	)
 
 	for j, tx := range body.Transactions {
@@ -1277,8 +1317,22 @@ func getBody(block *types.Block) *engine.ExecutionPayloadBody {
 		// type has activated yet or if there are just no requests of that type from
 		// only the block.
 		for _, req := range block.Requests() {
-			if d, ok := req.Inner().(*types.Deposit); ok {
-				depositRequests = append(depositRequests, d)
+			switch v := req.Inner().(type) {
+			case *types.GasRevenue:
+				gasRevenueRequests = append(gasRevenueRequests, v)
+			case *types.AddVoter:
+				addVoterRequests = append(addVoterRequests, v)
+			case *types.RemoveVoter:
+				removeVoterRequests = append(removeVoterRequests, v)
+			case *types.BridgeWithdrawal:
+				bridgeWithdrawalRequests = append(bridgeWithdrawalRequests, v)
+			case *types.ReplaceByFee:
+				replaceByFeeRequests = append(replaceByFeeRequests, v)
+			case *types.Cancel1:
+				cancel1Requests = append(cancel1Requests, v)
+
+			case *types.Deposit:
+				depositRequests = append(depositRequests, v)
 			}
 		}
 	}
@@ -1287,5 +1341,12 @@ func getBody(block *types.Block) *engine.ExecutionPayloadBody {
 		TransactionData: txs,
 		Withdrawals:     withdrawals,
 		Deposits:        depositRequests,
+
+		GasRevenues:       gasRevenueRequests,
+		AddVoters:         addVoterRequests,
+		RemoveVoters:      removeVoterRequests,
+		BridgeWithdrawals: bridgeWithdrawalRequests,
+		ReplaceByFees:     replaceByFeeRequests,
+		Cancel1s:          cancel1Requests,
 	}
 }

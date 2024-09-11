@@ -67,6 +67,62 @@ func (v *BlockValidator) ValidateBody(block *types.Block) error {
 		return fmt.Errorf("transaction root hash mismatch (header value %x, calculated %x)", header.TxHash, hash)
 	}
 
+	if v.config.Goat != nil {
+		extra := block.Header().Extra
+		if len(extra) != params.GoatHeaderExtraLengthV0 {
+			return fmt.Errorf("no goat tx root found (block %x)", block.Number())
+		}
+
+		goatTxLen, goatTxRoot := int(extra[0]), common.BytesToHash(extra[1:])
+		if l := block.Transactions().Len(); l < goatTxLen {
+			return fmt.Errorf("txs length(%d) is less than goat tx length %d", l, goatTxLen)
+		}
+		if hash := types.DeriveSha(block.Transactions()[:goatTxLen], trie.NewStackTrie(nil)); hash != goatTxRoot {
+			return fmt.Errorf("goat tx root hash mismatch (header value %x, calculated %x)", goatTxRoot, hash)
+		}
+		if len(block.Withdrawals()) > 0 {
+			return errors.New("withdrawals not allowed for goat-geth")
+		}
+
+		for i, tx := range block.Transactions() {
+			if i < goatTxLen {
+				if !tx.IsGoatTx() {
+					return fmt.Errorf("transaction %d should be goat tx", i)
+				}
+				if tx.To() == nil {
+					return fmt.Errorf("goat tx %d should have receiver address", i)
+				}
+			} else {
+				if tx.IsGoatTx() {
+					return fmt.Errorf("transaction %d should not be goat tx", i)
+				}
+				if tx.Type() == types.BlobTxType {
+					return fmt.Errorf("blob transaction %d is not allowed", i)
+				}
+			}
+		}
+
+		if header.RequestsHash != nil {
+			if block.Requests() == nil {
+				return errors.New("missing requests in block body")
+			}
+			if hash := types.DeriveSha(block.Requests(), trie.NewStackTrie(nil)); hash != *header.RequestsHash {
+				return fmt.Errorf("requests root hash mismatch (header value %x, calculated %x)", *header.RequestsHash, hash)
+			}
+		} else if block.Requests() != nil {
+			return errors.New("requests present in block body")
+		}
+
+		// Ancestor block must be known.
+		if !v.bc.HasBlockAndState(block.ParentHash(), block.NumberU64()-1) {
+			if !v.bc.HasBlock(block.ParentHash(), block.NumberU64()-1) {
+				return consensus.ErrUnknownAncestor
+			}
+			return consensus.ErrPrunedAncestor
+		}
+		return nil
+	}
+
 	// Withdrawals are present after the Shanghai fork.
 	if header.WithdrawalsHash != nil {
 		// Withdrawals list must be present in body after Shanghai.
@@ -79,6 +135,17 @@ func (v *BlockValidator) ValidateBody(block *types.Block) error {
 	} else if block.Withdrawals() != nil {
 		// Withdrawals are not allowed prior to Shanghai fork
 		return errors.New("withdrawals present in block body")
+	}
+
+	if header.RequestsHash != nil {
+		if block.Requests() == nil {
+			return errors.New("missing requests in block body")
+		}
+		if hash := types.DeriveSha(block.Requests(), trie.NewStackTrie(nil)); hash != *header.RequestsHash {
+			return fmt.Errorf("requests root hash mismatch (header value %x, calculated %x)", *header.RequestsHash, hash)
+		}
+	} else if block.Requests() != nil {
+		return errors.New("requests present in block body")
 	}
 
 	// Blob transactions may be present after the Cancun fork.

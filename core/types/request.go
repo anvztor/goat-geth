@@ -18,6 +18,7 @@ package types
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -49,6 +50,11 @@ func (r *Request) Type() byte {
 // Inner returns the inner request data.
 func (r *Request) Inner() RequestData {
 	return r.inner
+}
+
+// MarshalJSON marshals as JSON.
+func (r *Request) MarshalJSON() ([]byte, error) {
+	return json.Marshal(r.inner)
 }
 
 // NewRequest creates a new request.
@@ -147,6 +153,20 @@ func (r *Request) decode(b []byte) (RequestData, error) {
 	}
 	var inner RequestData
 	switch b[0] {
+	// goat types
+	case GoatGasRevenueRequestType:
+		inner = new(GasRevenue)
+	case GoatAddVoterRequestType:
+		inner = new(AddVoter)
+	case GoatRemoveVoterRequestType:
+		inner = new(RemoveVoter)
+	case GoatWithdrawalRequestType:
+		inner = new(BridgeWithdrawal)
+	case GoatReplaceByFeeRequestType:
+		inner = new(ReplaceByFee)
+	case GoatCancel1RequestType:
+		inner = new(ReplaceByFee)
+
 	case DepositRequestType:
 		inner = new(Deposit)
 	default:
