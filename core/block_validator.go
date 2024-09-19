@@ -102,25 +102,13 @@ func (v *BlockValidator) ValidateBody(block *types.Block) error {
 			}
 		}
 
-		if header.RequestsHash != nil {
-			if block.Requests() == nil {
-				return errors.New("missing requests in block body")
-			}
-			if hash := types.DeriveSha(block.Requests(), trie.NewStackTrie(nil)); hash != *header.RequestsHash {
-				return fmt.Errorf("requests root hash mismatch (header value %x, calculated %x)", *header.RequestsHash, hash)
-			}
-		} else if block.Requests() != nil {
-			return errors.New("requests present in block body")
+		if header.RequestsHash == nil || block.Requests() == nil {
+			return errors.New("missing requests in block body")
 		}
 
-		// Ancestor block must be known.
-		if !v.bc.HasBlockAndState(block.ParentHash(), block.NumberU64()-1) {
-			if !v.bc.HasBlock(block.ParentHash(), block.NumberU64()-1) {
-				return consensus.ErrUnknownAncestor
-			}
-			return consensus.ErrPrunedAncestor
+		if hash := types.DeriveSha(block.Requests(), trie.NewStackTrie(nil)); hash != *header.RequestsHash {
+			return fmt.Errorf("requests root hash mismatch (header value %x, calculated %x)", *header.RequestsHash, hash)
 		}
-		return nil
 	}
 
 	// Withdrawals are present after the Shanghai fork.
@@ -137,20 +125,13 @@ func (v *BlockValidator) ValidateBody(block *types.Block) error {
 		return errors.New("withdrawals present in block body")
 	}
 
-	if header.RequestsHash != nil {
-		if block.Requests() == nil {
-			return errors.New("missing requests in block body")
-		}
-		if hash := types.DeriveSha(block.Requests(), trie.NewStackTrie(nil)); hash != *header.RequestsHash {
-			return fmt.Errorf("requests root hash mismatch (header value %x, calculated %x)", *header.RequestsHash, hash)
-		}
-	} else if block.Requests() != nil {
-		return errors.New("requests present in block body")
-	}
-
 	// Blob transactions may be present after the Cancun fork.
 	var blobs int
 	for i, tx := range block.Transactions() {
+		if v.config.Goat != nil {
+			break
+		}
+
 		// Count the number of blobs to validate against the header's blobGasUsed
 		blobs += len(tx.BlobHashes())
 
