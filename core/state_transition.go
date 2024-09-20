@@ -480,18 +480,19 @@ func (st *StateTransition) TransitionDb() (*ExecutionResult, error) {
 
 		// deposit
 		if v := msg.Deposit; v != nil {
-			amount, ok := uint256.FromBig(v.Amount)
-			if !ok {
-				return nil, fmt.Errorf("goat tx failed (invalid amount to mint: %s)", v.Amount)
+			amount, overflow := uint256.FromBig(v.Amount)
+			if overflow {
+				return nil, fmt.Errorf("goat tx failed (amount overflowed to mint: %s)", v.Amount)
 			}
 
 			// get the tax from call returns
 			if len(ret) != 32 {
 				return nil, fmt.Errorf("goat tx failed (deposit should return uint256 but got %x)", ret)
 			}
-			tax, ok := uint256.FromBig(new(big.Int).SetBytes(ret))
-			if !ok {
-				return nil, fmt.Errorf("goat tx failed (invalid amount to pay tax: %s)", v.Amount)
+
+			tax, overflow := uint256.FromBig(new(big.Int).SetBytes(ret))
+			if overflow {
+				return nil, fmt.Errorf("goat tx failed (amount overflowed to pay tax: %s)", v.Amount)
 			}
 
 			// sub the tax and pay the tax to GF
