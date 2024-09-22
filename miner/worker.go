@@ -279,7 +279,7 @@ func (miner *Miner) prepareWork(genParams *generateParams) (*environment, error)
 		env.state.SetTxContext(tx.Hash(), env.tcount)
 		err = miner.commitTransaction(env, tx)
 		if err != nil {
-			return nil, fmt.Errorf("failed to commit goat tx: %s, nonce: %v, err: %w", tx.Hash(), tx.Nonce(), err)
+			return nil, err
 		}
 	}
 
