@@ -21,6 +21,7 @@ import (
 	"math"
 	"math/big"
 
+	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	cmath "github.com/ethereum/go-ethereum/common/math"
 	"github.com/ethereum/go-ethereum/core/tracing"
@@ -155,7 +156,7 @@ type Message struct {
 	// goat
 	IsGoatTx bool            // goat tx has no gas consumed
 	Deposit  *goattypes.Mint // deposit from L1
-	Reward   *goattypes.Mint // reward and un-delegation from consensus layer
+	Claim    *goattypes.Mint // gas fee and undelegation from consensus layer
 }
 
 // TransactionToMessage converts a transaction into a Message.
@@ -178,7 +179,7 @@ func TransactionToMessage(tx *types.Transaction, s types.Signer, baseFee *big.In
 		// goat
 		IsGoatTx: tx.IsGoatTx(),
 		Deposit:  tx.Deposit(),
-		Reward:   tx.Reward(),
+		Claim:    tx.Claim(),
 	}
 	// If baseFee provided, set gasPrice to effectiveGasPrice.
 	if baseFee != nil {
@@ -475,49 +476,55 @@ func (st *StateTransition) TransitionDb() (*ExecutionResult, error) {
 
 	if msg.IsGoatTx {
 		if vmerr != nil {
-			return nil, fmt.Errorf("goat tx failed (to %s data %x err %s)", msg.To, msg.Data, vmerr)
+			if vmerr == vm.ErrExecutionReverted {
+				reason, errUnpack := abi.UnpackRevert(ret)
+				if errUnpack == nil {
+					return nil, fmt.Errorf("goat tx reverted (to %s nonce %d data %x err %s)", msg.To, msg.Nonce, msg.Data, reason)
+				}
+			}
+			return nil, fmt.Errorf("goat tx reverted (to %s nonce %d data %x err %s ret %x)", msg.To, msg.Nonce, msg.Data, vmerr, ret)
 		}
 
 		// deposit
 		if v := msg.Deposit; v != nil {
 			amount, overflow := uint256.FromBig(v.Amount)
 			if overflow {
-				return nil, fmt.Errorf("goat tx failed (amount overflowed to mint: %s)", v.Amount)
+				return nil, fmt.Errorf("goat tx error (amount overflowed to mint: %s)", v.Amount)
 			}
 
 			// get the tax from call returns
 			if len(ret) != 32 {
-				return nil, fmt.Errorf("goat tx failed (deposit should return uint256 but got %x)", ret)
+				return nil, fmt.Errorf("goat tx error (deposit should return uint256 but got %x)", ret)
 			}
 
 			tax, overflow := uint256.FromBig(new(big.Int).SetBytes(ret))
 			if overflow {
-				return nil, fmt.Errorf("goat tx failed (amount overflowed to pay tax: %s)", v.Amount)
+				return nil, fmt.Errorf("goat tx error (amount overflowed to pay tax: %s)", v.Amount)
 			}
 
 			// sub the tax and pay the tax to GF
 			if tax.BitLen() > 0 {
 				if amount.Cmp(tax) < 0 {
-					return nil, fmt.Errorf("goat tx failed (tax is larger than deposit: deposit %s tax %s)", v.Amount, tax)
+					return nil, fmt.Errorf("goat tx error (tax is larger than deposit: deposit %s tax %s)", v.Amount, tax)
 				}
 				amount.Sub(amount, tax)
 				st.state.AddBalance(goattypes.GoatFoundationContract, tax, tracing.BalanceGoatTax)
 			}
 
 			// add the deposit value(withtout tax) to the target
-			log.Debug("NewDeposit", "address", v.Address, "amount", amount, "tax", tax)
+			log.Info("NewDeposit", "address", v.Address, "amount", amount, "tax", tax)
 			st.state.AddBalance(v.Address, amount, tracing.BalanceGoatDepoist)
 		}
 
 		// distribute reward to a validator or a delegator
-		if v := msg.Reward; v != nil {
+		if v := msg.Claim; v != nil {
 			amount, ok := uint256.FromBig(v.Amount)
 			if !ok {
-				return nil, fmt.Errorf("goat tx failed (invalid amount to distribute reward: %s)", v.Amount)
+				return nil, fmt.Errorf("goat tx error (invalid amount to distribute reward: %s)", v.Amount)
 			}
 
 			// add the reward value to the target
-			log.Debug("NewReward", "address", v.Address, "amount", amount)
+			log.Info("NewClaim", "address", v.Address, "amount", amount)
 			st.state.AddBalance(v.Address, amount, tracing.BalanceIncreaseWithdrawal)
 		}
 
