@@ -28,7 +28,7 @@ type Tx interface {
 	Decode([]byte) error
 	Copy() Tx
 	Deposit() *Mint
-	Reward() *Mint
+	Cliam() *Mint // gas fee and undelegation from consensus layer
 
 	Sender() common.Address
 	Contract() common.Address

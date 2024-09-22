@@ -30,11 +30,11 @@ func (tx *Transaction) Deposit() *goattypes.Mint {
 	return tx.inner.(*GoatTx).inner.Deposit()
 }
 
-func (tx *Transaction) Reward() *goattypes.Mint {
+func (tx *Transaction) Claim() *goattypes.Mint {
 	if !tx.IsGoatTx() {
 		return nil
 	}
-	return tx.inner.(*GoatTx).inner.Reward()
+	return tx.inner.(*GoatTx).inner.Cliam()
 }
 
 const (

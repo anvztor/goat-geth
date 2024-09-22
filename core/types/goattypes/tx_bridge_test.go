@@ -74,8 +74,8 @@ func TestDepositTx(t *testing.T) {
 				t.Errorf("DepositTx.Deposit(%v) != want %v", got, want)
 			}
 
-			if tx.Reward() != nil {
-				t.Errorf("DepositTx.Reward() != nil")
+			if tx.Cliam() != nil {
+				t.Errorf("DepositTx.Cliam() != nil")
 			}
 
 			if tx.Sender() != RelayerExecutor {
@@ -131,8 +131,8 @@ func TestCancel2Tx_Encode(t *testing.T) {
 				t.Errorf("Cancel2Tx.Deposit() !=nil")
 			}
 
-			if tx.Reward() != nil {
-				t.Errorf("Cancel2Tx.Reward() != nil")
+			if tx.Cliam() != nil {
+				t.Errorf("Cancel2Tx.Cliam() != nil")
 			}
 
 			if tx.Sender() != RelayerExecutor {
@@ -195,8 +195,8 @@ func TestPaidTx_Encode(t *testing.T) {
 				t.Errorf("PaidTx.Deposit() !=nil")
 			}
 
-			if tx.Reward() != nil {
-				t.Errorf("PaidTx.Reward() != nil")
+			if tx.Cliam() != nil {
+				t.Errorf("PaidTx.Cliam() != nil")
 			}
 
 			if tx.Sender() != RelayerExecutor {
@@ -261,8 +261,8 @@ func TestAppendBitcoinHash_Encode(t *testing.T) {
 				t.Errorf("AppendBitcoinHash.Deposit() !=nil")
 			}
 
-			if tx.Reward() != nil {
-				t.Errorf("AppendBitcoinHash.Reward() != nil")
+			if tx.Cliam() != nil {
+				t.Errorf("AppendBitcoinHash.Cliam() != nil")
 			}
 
 			if tx.Sender() != RelayerExecutor {
