@@ -512,7 +512,7 @@ func (st *StateTransition) TransitionDb() (*ExecutionResult, error) {
 			}
 
 			// add the deposit value(withtout tax) to the target
-			log.Info("NewDeposit", "address", v.Address, "amount", amount, "tax", tax)
+			log.Debug("NewDeposit", "address", v.Address, "amount", amount, "tax", tax)
 			st.state.AddBalance(v.Address, amount, tracing.BalanceGoatDepoist)
 		}
 
@@ -524,7 +524,7 @@ func (st *StateTransition) TransitionDb() (*ExecutionResult, error) {
 			}
 
 			// add the reward value to the target
-			log.Info("NewClaim", "address", v.Address, "amount", amount)
+			log.Debug("NewClaim", "address", v.Address, "amount", amount)
 			st.state.AddBalance(v.Address, amount, tracing.BalanceIncreaseWithdrawal)
 		}
 
