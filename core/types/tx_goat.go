@@ -34,7 +34,7 @@ func (tx *Transaction) Claim() *goattypes.Mint {
 	if !tx.IsGoatTx() {
 		return nil
 	}
-	return tx.inner.(*GoatTx).inner.Cliam()
+	return tx.inner.(*GoatTx).inner.Claim()
 }
 
 const (

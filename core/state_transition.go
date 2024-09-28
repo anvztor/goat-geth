@@ -497,15 +497,11 @@ func (st *StateTransition) TransitionDb() (*ExecutionResult, error) {
 				return nil, fmt.Errorf("goat tx error (deposit should return uint256 but got %x)", ret)
 			}
 
-			tax, overflow := uint256.FromBig(new(big.Int).SetBytes(ret))
-			if overflow {
-				return nil, fmt.Errorf("goat tx error (amount overflowed to pay tax: %s)", v.Amount)
-			}
-
+			tax, _ := uint256.FromBig(new(big.Int).SetBytes(ret))
 			// sub the tax and pay the tax to GF
 			if tax.BitLen() > 0 {
 				if amount.Cmp(tax) < 0 {
-					return nil, fmt.Errorf("goat tx error (tax is larger than deposit: deposit %s tax %s)", v.Amount, tax)
+					return nil, fmt.Errorf("goat tx error (tax is larger: deposit %s tax %s)", v.Amount, tax)
 				}
 				amount.Sub(amount, tax)
 				st.state.AddBalance(goattypes.GoatFoundationContract, tax, tracing.BalanceGoatTax)
@@ -518,14 +514,15 @@ func (st *StateTransition) TransitionDb() (*ExecutionResult, error) {
 
 		// distribute reward to a validator or a delegator
 		if v := msg.Claim; v != nil {
-			amount, ok := uint256.FromBig(v.Amount)
-			if !ok {
-				return nil, fmt.Errorf("goat tx error (invalid amount to distribute reward: %s)", v.Amount)
+			amount, overflow := uint256.FromBig(v.Amount)
+			if overflow {
+				return nil, fmt.Errorf("goat tx error (amount overflowed to distribute reward: %s)", v.Amount)
 			}
 
 			// add the reward value to the target
 			log.Debug("NewClaim", "address", v.Address, "amount", amount)
 			st.state.AddBalance(v.Address, amount, tracing.BalanceIncreaseWithdrawal)
+			st.state.SubBalance(goattypes.LockingContract, amount, tracing.BalanceChangeTransfer)
 		}
 
 		gasUsed := st.gasUsed()

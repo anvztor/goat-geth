@@ -28,7 +28,7 @@ type Tx interface {
 	Decode([]byte) error
 	Copy() Tx
 	Deposit() *Mint
-	Cliam() *Mint // gas fee and undelegation from consensus layer
+	Claim() *Mint // gas fee and undelegation from consensus layer
 
 	Sender() common.Address
 	Contract() common.Address
@@ -48,6 +48,13 @@ func TxDecode(module Module, action Action, data []byte) (Tx, error) {
 			inner = new(PaidTx)
 		case BitcoinNewHashAction:
 			inner = new(AppendBitcoinHash)
+		}
+	case LockingModule:
+		switch action {
+		case LockingCompleteUnlockAction:
+			inner = new(CompleteUnlock)
+		case LockingDistributeRewardAction:
+			inner = new(DistributeReward)
 		}
 	}
 	if inner == nil {

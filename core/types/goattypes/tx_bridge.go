@@ -93,7 +93,7 @@ func (tx *DepositTx) Deposit() *Mint {
 	return &Mint{tx.Target, new(big.Int).Set(tx.Amount)}
 }
 
-func (tx *DepositTx) Cliam() *Mint {
+func (tx *DepositTx) Claim() *Mint {
 	return nil
 }
 
@@ -145,7 +145,7 @@ func (tx *Cancel2Tx) Deposit() *Mint {
 	return nil
 }
 
-func (tx *Cancel2Tx) Cliam() *Mint {
+func (tx *Cancel2Tx) Claim() *Mint {
 	return nil
 }
 
@@ -226,7 +226,7 @@ func (tx *PaidTx) Deposit() *Mint {
 	return nil
 }
 
-func (tx *PaidTx) Cliam() *Mint {
+func (tx *PaidTx) Claim() *Mint {
 	return nil
 }
 
@@ -281,7 +281,7 @@ func (tx *AppendBitcoinHash) Deposit() *Mint {
 	return nil
 }
 
-func (tx *AppendBitcoinHash) Cliam() *Mint {
+func (tx *AppendBitcoinHash) Claim() *Mint {
 	return nil
 }
 

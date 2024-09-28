@@ -18,7 +18,6 @@ package types
 
 import (
 	"bytes"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -50,55 +49,6 @@ func (r *Request) Type() byte {
 // Inner returns the inner request data.
 func (r *Request) Inner() RequestData {
 	return r.inner
-}
-
-// Request intermediate type for json codec
-type requestMarshaling struct {
-	Type byte            `json:"type"`
-	Data json.RawMessage `json:"data"`
-}
-
-// UnmarshalJSON implements json.Marshaler interface
-func (r *Request) MarshalJSON() ([]byte, error) {
-	if r.inner == nil {
-		return nil, errors.New("no request data")
-	}
-
-	data, err := json.Marshal(r.inner)
-	if err != nil {
-		return nil, err
-	}
-
-	return json.Marshal(requestMarshaling{Type: r.inner.requestType(), Data: data})
-}
-
-// UnmarshalJSON implements json.Unmarshaler interface
-func (r *Request) UnmarshalJSON(b []byte) error {
-	var raw requestMarshaling
-	if err := json.Unmarshal(b, &raw); err != nil {
-		return err
-	}
-
-	switch raw.Type {
-	case GoatGasRevenueRequestType:
-		r.inner = new(GasRevenue)
-	case GoatAddVoterRequestType:
-		r.inner = new(AddVoter)
-	case GoatRemoveVoterRequestType:
-		r.inner = new(RemoveVoter)
-	case GoatWithdrawalRequestType:
-		r.inner = new(BridgeWithdrawal)
-	case GoatReplaceByFeeRequestType:
-		r.inner = new(ReplaceByFee)
-	case GoatCancel1RequestType:
-		r.inner = new(Cancel1)
-	case DepositRequestType:
-		r.inner = new(Deposit)
-	default:
-		return ErrRequestTypeNotSupported
-	}
-
-	return json.Unmarshal(raw.Data, r.inner)
 }
 
 // NewRequest creates a new request.
@@ -210,6 +160,16 @@ func (r *Request) decode(b []byte) (RequestData, error) {
 		inner = new(ReplaceByFee)
 	case GoatCancel1RequestType:
 		inner = new(ReplaceByFee)
+	case GoatCreateValidatorType:
+		r.inner = new(CreateValidator)
+	case GoatLockType:
+		r.inner = new(ValidatorLock)
+	case GoatUnlockType:
+		r.inner = new(ValidatorUnlock)
+	case GoatClaimType:
+		r.inner = new(GoatRewardClaim)
+	case GoatSetTokenWeight:
+		r.inner = new(SetTokenWeight)
 
 	case DepositRequestType:
 		inner = new(Deposit)

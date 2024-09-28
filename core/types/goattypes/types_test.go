@@ -103,6 +103,45 @@ func TestTxDecode(t *testing.T) {
 			want:    nil,
 			wantErr: true,
 		},
+		{
+			name: "new-btc-hash",
+			args: args{
+				module: BirdgeModule,
+				action: BitcoinNewHashAction,
+				data:   hexutil.MustDecode("0x94f490bdbb7ba5e4830730dfa97c1eaaf199a8ef8ea2a865ca44c600fa032772a7af9edc"),
+			},
+			want: &AppendBitcoinHash{
+				Hash: common.HexToHash("0xbb7ba5e4830730dfa97c1eaaf199a8ef8ea2a865ca44c600fa032772a7af9edc"),
+			},
+		},
+		{
+			name: "CompleteUnlock",
+			args: args{
+				module: LockingModule,
+				action: LockingCompleteUnlockAction,
+				data:   hexutil.MustDecode("0x00aba51a00000000000000000000000000000000000000000000000000000000000000640000000000000000000000005b38da6a701c568545dcfcb03fcb875f56beddc400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001"),
+			},
+			want: &CompleteUnlock{
+				Id:        100,
+				Recipient: common.HexToAddress("0x5B38Da6a701c568545dCfcB03FcB875f56beddC4"),
+				Token:     common.Address{},
+				Amount:    big.NewInt(1),
+			},
+		},
+		{
+			name: "DistributeReward",
+			args: args{
+				module: LockingModule,
+				action: LockingDistributeRewardAction,
+				data:   hexutil.MustDecode("0xbd9fadb500000000000000000000000000000000000000000000000000000000000000020000000000000000000000009ae387acdafe4b9d315d0bb56b06ab91f31b967000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000064"),
+			},
+			want: &DistributeReward{
+				Id:        2,
+				Recipient: common.HexToAddress("0x9ae387acdafe4b9d315d0bb56b06ab91f31b9670"),
+				Goat:      big.NewInt(1),
+				Amount:    big.NewInt(100),
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

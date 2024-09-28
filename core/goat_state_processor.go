@@ -30,7 +30,13 @@ func ProcessGoatFoundationReward(statedb *state.StateDB, gasFees *big.Int) *big.
 		statedb.AddBalance(goattypes.GoatFoundationContract, f, tracing.BalanceIncreaseRewardTransactionFee)
 	}
 
-	return new(big.Int).Sub(gasFees, tax)
+	// add gas revenue to locking contract
+	gas := new(big.Int).Sub(gasFees, tax)
+	if gas.BitLen() != 0 {
+		f, _ := uint256.FromBig(gas)
+		statedb.AddBalance(goattypes.LockingContract, f, tracing.BalanceIncreaseRewardTransactionFee)
+	}
+	return gas
 }
 
 func ProcessGoatRequests(reward *big.Int, logs []*types.Log, config *params.ChainConfig) (types.Requests, error) {
