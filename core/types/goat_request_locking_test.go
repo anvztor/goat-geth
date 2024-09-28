@@ -61,6 +61,12 @@ func TestUnpackIntoCreateValidator(t *testing.T) {
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("UnpackIntoCreateValidator() = %v, want %v", got, tt.want)
 			}
+			if got.requestType() != GoatCreateValidatorType {
+				t.Errorf("UnpackIntoCreateValidator() = not GoatCreateValidatorType")
+			}
+			if !reflect.DeepEqual(got.copy(), got) {
+				t.Errorf("UnpackIntoCreateValidator(): copy is not DeepEqual")
+			}
 		})
 	}
 }
@@ -94,6 +100,12 @@ func TestUnpackIntoValidatorLock(t *testing.T) {
 			}
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("UnpackIntoValidatorLock() = %v, want %v", got, tt.want)
+			}
+			if got.requestType() != GoatLockType {
+				t.Errorf("UnpackIntoValidatorLock() = not GoatLockType")
+			}
+			if !reflect.DeepEqual(got.copy(), got) {
+				t.Errorf("UnpackIntoValidatorLock(): copy is not DeepEqual")
 			}
 		})
 	}
@@ -131,6 +143,12 @@ func TestUnpackIntoValidatorUnlock(t *testing.T) {
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("UnpackIntoValidatorUnlock() = %v, want %v", got, tt.want)
 			}
+			if got.requestType() != GoatUnlockType {
+				t.Errorf("UnpackIntoValidatorUnlock() = not GoatUnlockType")
+			}
+			if !reflect.DeepEqual(got.copy(), got) {
+				t.Errorf("UnpackIntoValidatorUnlock(): copy is not DeepEqual")
+			}
 		})
 	}
 }
@@ -165,6 +183,12 @@ func TestUnpackIntoGoatRewardClaim(t *testing.T) {
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("UnpackIntoGoatRewardClaim() = %v, want %v", got, tt.want)
 			}
+			if got.requestType() != GoatClaimRewardType {
+				t.Errorf("UnpackIntoGoatRewardClaim() = not GoatClaimType")
+			}
+			if !reflect.DeepEqual(got.copy(), got) {
+				t.Errorf("UnpackIntoGoatRewardClaim(): copy is not DeepEqual")
+			}
 		})
 	}
 }
@@ -197,6 +221,51 @@ func TestUnpackIntoSetTokenWeight(t *testing.T) {
 			}
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("UnpackIntoSetTokenWeight() = %v, want %v", got, tt.want)
+			}
+			if got.requestType() != GoatSetTokenWeight {
+				t.Errorf("UnpackIntoSetTokenWeight() = not GoatSetTokenWeight")
+			}
+			if !reflect.DeepEqual(got.copy(), got) {
+				t.Errorf("UnpackIntoSetTokenWeight(): copy is not DeepEqual")
+			}
+		})
+	}
+}
+
+func TestUnpackIntoSetTokenThreshold(t *testing.T) {
+	type args struct {
+		data []byte
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    *SetTokenThreshold
+		wantErr bool
+	}{
+		{
+			name: "1",
+			args: args{hexutil.MustDecode("0x0000000000000000000000005b38da6a701c568545dcfcb03fcb875f56beddc4000000000000000000000000000000000000000000000000000000000000000a")},
+			want: &SetTokenThreshold{
+				Token:     common.HexToAddress("0x5B38Da6a701c568545dCfcB03FcB875f56beddC4"),
+				Threshold: big.NewInt(10),
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := UnpackIntoSetTokenThreshold(tt.args.data)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("UnpackIntoSetTokenThreshold() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("UnpackIntoSetTokenThreshold() = %v, want %v", got, tt.want)
+			}
+			if got.requestType() != GoatSetTokenThreshold {
+				t.Errorf("UnpackIntoSetTokenThreshold() = not GoatSetTokenThreshold")
+			}
+			if !reflect.DeepEqual(got.copy(), got) {
+				t.Errorf("UnpackIntoSetTokenThreshold(): copy is not DeepEqual")
 			}
 		})
 	}

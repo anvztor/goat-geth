@@ -159,7 +159,7 @@ type goatRewardClaimMarshaling struct {
 	Id hexutil.Uint64
 }
 
-func (d *GoatRewardClaim) requestType() byte            { return GoatClaimType }
+func (d *GoatRewardClaim) requestType() byte            { return GoatClaimRewardType }
 func (d *GoatRewardClaim) encode(b *bytes.Buffer) error { return rlp.Encode(b, d) }
 func (d *GoatRewardClaim) decode(input []byte) error    { return rlp.DecodeBytes(input, d) }
 func (d *GoatRewardClaim) copy() RequestData {
@@ -206,6 +206,40 @@ func (d *SetTokenWeight) copy() RequestData {
 	}
 }
 
+type SetTokenThreshold struct {
+	Token     common.Address `json:"token"`
+	Threshold *big.Int       `json:"threshold"`
+}
+
+func UnpackIntoSetTokenThreshold(data []byte) (*SetTokenThreshold, error) {
+	if len(data) != 64 {
+		return nil, fmt.Errorf("SetTokenThreshold wrong length: want 64, have %d", len(data))
+	}
+	return &SetTokenThreshold{
+		Token:     common.BytesToAddress(data[:32]),
+		Threshold: new(big.Int).SetBytes(data[32:64]),
+	}, nil
+}
+
+func (d *SetTokenThreshold) requestType() byte            { return GoatSetTokenThreshold }
+func (d *SetTokenThreshold) encode(b *bytes.Buffer) error { return rlp.Encode(b, d) }
+func (d *SetTokenThreshold) decode(input []byte) error    { return rlp.DecodeBytes(input, d) }
+func (d *SetTokenThreshold) copy() RequestData {
+	return &SetTokenThreshold{
+		Token:     d.Token,
+		Threshold: new(big.Int).Set(d.Threshold),
+	}
+}
+
+var (
+	GoatCreateValidatorTopic      = common.HexToHash("0xf3aa84440b70359721372633122645674adb6dbb72622a222627248ef053a7dd")
+	GoatValidatorLockTopic        = common.HexToHash("0xec36c0364d931187a76cf66d7eee08fad0ec2e8b7458a8d8b26b36769d4d13f3")
+	GoatValidatorUnlockTopic      = common.HexToHash("0x40f2a8c5e2e2a9ad2f4e4dfc69825595b526178445c3eb22b02edfd190601db7")
+	GoatClaimRewardTopic          = common.HexToHash("0xa983a6cfc4bd1095dac7b145ae020ba08e16cc7efa2051cc6b77e4011b9ee99b")
+	GoatUpdateTokenWeightTopic    = common.HexToHash("0xb59bf4596e5415117fb4625044cb5b0ca5b273742825b026d06afe82a48e6217")
+	GoatUpdateTokenThresholdTopic = common.HexToHash("0x326e29ab1c62c7d77fdfb302916e82e1a54f3b9961db75ee7e18afe488a0e92d")
+)
+
 func GetLockingRequests(topics []common.Hash, data []byte) (Requests, error) {
 	if len(topics) != 1 {
 		return nil, nil
@@ -231,7 +265,7 @@ func GetLockingRequests(topics []common.Hash, data []byte) (Requests, error) {
 			return nil, err
 		}
 		reqs = append(reqs, NewRequest(req))
-	case GoatValidatorClaimTopic:
+	case GoatClaimRewardTopic:
 		req, err := UnpackIntoGoatRewardClaim(data)
 		if err != nil {
 			return nil, err
@@ -239,6 +273,12 @@ func GetLockingRequests(topics []common.Hash, data []byte) (Requests, error) {
 		reqs = append(reqs, NewRequest(req))
 	case GoatUpdateTokenWeightTopic:
 		req, err := UnpackIntoSetTokenWeight(data)
+		if err != nil {
+			return nil, err
+		}
+		reqs = append(reqs, NewRequest(req))
+	case GoatUpdateTokenThresholdTopic:
+		req, err := UnpackIntoSetTokenThreshold(data)
 		if err != nil {
 			return nil, err
 		}

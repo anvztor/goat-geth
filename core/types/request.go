@@ -166,10 +166,12 @@ func (r *Request) decode(b []byte) (RequestData, error) {
 		r.inner = new(ValidatorLock)
 	case GoatUnlockType:
 		r.inner = new(ValidatorUnlock)
-	case GoatClaimType:
+	case GoatClaimRewardType:
 		r.inner = new(GoatRewardClaim)
 	case GoatSetTokenWeight:
 		r.inner = new(SetTokenWeight)
+	case GoatSetTokenThreshold:
+		r.inner = new(SetTokenThreshold)
 
 	case DepositRequestType:
 		inner = new(Deposit)
