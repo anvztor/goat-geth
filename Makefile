@@ -47,6 +47,15 @@ devtools:
 	@type "solc" 2> /dev/null || echo 'Please install solc'
 	@type "protoc" 2> /dev/null || echo 'Please install protoc'
 
+docker-build-all:
+	docker buildx build --platform linux/amd64,linux/arm64 -t anvztor/geth:latest --push .
+
+docker-build:
+	docker buildx build --platform linux/amd64 -t anvztor/geth:latest --load .
+
+docker-build-x:
+	docker buildx build --platform linux/arm64 -t anvztor/geth:latest --load .
+
 #? help: Get more info on make commands.
 help: Makefile
 	@echo ''
