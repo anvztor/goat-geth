@@ -135,7 +135,7 @@ func TestDistributeRewardTx(t *testing.T) {
 				Id:        tt.fields.Id,
 				Recipient: tt.fields.Recipient,
 				Goat:      tt.fields.Goat,
-				Amount:    tt.fields.Amount,
+				GasReward: tt.fields.Amount,
 			}
 
 			if cop := tx.Copy(); !reflect.DeepEqual(tx, cop) {

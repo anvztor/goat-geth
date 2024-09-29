@@ -75,40 +75,41 @@ func (d *CreateValidator) copy() RequestData {
 	}
 }
 
-type ValidatorLock struct {
+//go:generate go run github.com/fjl/gencodec -type GoatLock -field-override goatLockMarshaling -out gen_goat_request_goat_lock.go
+type GoatLock struct {
 	Validator common.Address `json:"validator"`
 	Token     common.Address `json:"token"`
 	Amount    *big.Int       `json:"amount"`
 }
 
-//go:generate go run github.com/fjl/gencodec -type ValidatorLock -field-override validatorLockMarshaling -out gen_goat_request_validator_lock.go
-type validatorLockMarshaling struct {
+type goatLockMarshaling struct {
 	Amount *hexutil.Big
 }
 
-func (d *ValidatorLock) requestType() byte            { return GoatLockType }
-func (d *ValidatorLock) encode(b *bytes.Buffer) error { return rlp.Encode(b, d) }
-func (d *ValidatorLock) decode(input []byte) error    { return rlp.DecodeBytes(input, d) }
-func (d *ValidatorLock) copy() RequestData {
-	return &ValidatorLock{
+func (d *GoatLock) requestType() byte            { return GoatLockRequestType }
+func (d *GoatLock) encode(b *bytes.Buffer) error { return rlp.Encode(b, d) }
+func (d *GoatLock) decode(input []byte) error    { return rlp.DecodeBytes(input, d) }
+func (d *GoatLock) copy() RequestData {
+	return &GoatLock{
 		Validator: d.Validator,
 		Token:     d.Token,
 		Amount:    new(big.Int).Set(d.Amount),
 	}
 }
 
-func UnpackIntoValidatorLock(data []byte) (*ValidatorLock, error) {
+func UnpackIntoValidatorLock(data []byte) (*GoatLock, error) {
 	if len(data) != 96 {
 		return nil, fmt.Errorf("ValidatorLock wrong length: want 96, have %d", len(data))
 	}
-	return &ValidatorLock{
+	return &GoatLock{
 		Validator: common.BytesToAddress(data[:32]),
 		Token:     common.BytesToAddress(data[32:64]),
 		Amount:    new(big.Int).SetBytes(data[64:]),
 	}, nil
 }
 
-type ValidatorUnlock struct {
+//go:generate go run github.com/fjl/gencodec -type GoatUnlock -field-override goatUnlockMarshaling -out gen_goat_request_validator_unlock.go
+type GoatUnlock struct {
 	Id        uint64         `json:"id"`
 	Validator common.Address `json:"validator"`
 	Token     common.Address `json:"token"`
@@ -116,17 +117,16 @@ type ValidatorUnlock struct {
 	Amount    *big.Int       `json:"amount"`
 }
 
-//go:generate go run github.com/fjl/gencodec -type ValidatorUnlock -field-override validatorUnlockMarshaling -out gen_goat_request_validator_unlock.go
-type validatorUnlockMarshaling struct {
+type goatUnlockMarshaling struct {
 	Id     hexutil.Uint64
 	Amount *hexutil.Big
 }
 
-func (d *ValidatorUnlock) requestType() byte            { return GoatUnlockType }
-func (d *ValidatorUnlock) encode(b *bytes.Buffer) error { return rlp.Encode(b, d) }
-func (d *ValidatorUnlock) decode(input []byte) error    { return rlp.DecodeBytes(input, d) }
-func (d *ValidatorUnlock) copy() RequestData {
-	return &ValidatorUnlock{
+func (d *GoatUnlock) requestType() byte            { return GoatUnlockRequestType }
+func (d *GoatUnlock) encode(b *bytes.Buffer) error { return rlp.Encode(b, d) }
+func (d *GoatUnlock) decode(input []byte) error    { return rlp.DecodeBytes(input, d) }
+func (d *GoatUnlock) copy() RequestData {
+	return &GoatUnlock{
 		Id:        d.Id,
 		Validator: d.Validator,
 		Token:     d.Token,
@@ -135,11 +135,11 @@ func (d *ValidatorUnlock) copy() RequestData {
 	}
 }
 
-func UnpackIntoValidatorUnlock(data []byte) (*ValidatorUnlock, error) {
+func UnpackIntoValidatorUnlock(data []byte) (*GoatUnlock, error) {
 	if len(data) != 160 {
 		return nil, fmt.Errorf("ValidatorUnlock wrong length: want 160, have %d", len(data))
 	}
-	return &ValidatorUnlock{
+	return &GoatUnlock{
 		Id:        new(big.Int).SetBytes(data[:32]).Uint64(),
 		Validator: common.BytesToAddress(data[32:64]),
 		Recipient: common.BytesToAddress(data[64:96]),
@@ -148,84 +148,89 @@ func UnpackIntoValidatorUnlock(data []byte) (*ValidatorUnlock, error) {
 	}, nil
 }
 
-type GoatRewardClaim struct {
+//go:generate go run github.com/fjl/gencodec -type GoatClaimReward -field-override goatRewardClaimMarshaling -out gen_goat_request_reward_claim.go
+type GoatClaimReward struct {
 	Id        uint64         `json:"id"`
 	Validator common.Address `json:"validator"`
 	Recipient common.Address `json:"recipient"`
 }
 
-//go:generate go run github.com/fjl/gencodec -type GoatRewardClaim -field-override goatRewardClaimMarshaling -out gen_goat_request_reward_cliam.go
 type goatRewardClaimMarshaling struct {
 	Id hexutil.Uint64
 }
 
-func (d *GoatRewardClaim) requestType() byte            { return GoatClaimRewardType }
-func (d *GoatRewardClaim) encode(b *bytes.Buffer) error { return rlp.Encode(b, d) }
-func (d *GoatRewardClaim) decode(input []byte) error    { return rlp.DecodeBytes(input, d) }
-func (d *GoatRewardClaim) copy() RequestData {
-	return &GoatRewardClaim{
+func (d *GoatClaimReward) requestType() byte            { return GoatClaimRewardRequestType }
+func (d *GoatClaimReward) encode(b *bytes.Buffer) error { return rlp.Encode(b, d) }
+func (d *GoatClaimReward) decode(input []byte) error    { return rlp.DecodeBytes(input, d) }
+func (d *GoatClaimReward) copy() RequestData {
+	return &GoatClaimReward{
 		Id:        d.Id,
 		Validator: d.Validator,
 		Recipient: d.Recipient,
 	}
 }
 
-func UnpackIntoGoatRewardClaim(data []byte) (*GoatRewardClaim, error) {
+func UnpackIntoGoatRewardClaim(data []byte) (*GoatClaimReward, error) {
 	if len(data) != 96 {
 		return nil, fmt.Errorf("GoatRewardClaim wrong length: want 96, have %d", len(data))
 	}
-	return &GoatRewardClaim{
+	return &GoatClaimReward{
 		Id:        new(big.Int).SetBytes(data[:32]).Uint64(),
 		Validator: common.BytesToAddress(data[32:64]),
 		Recipient: common.BytesToAddress(data[64:96]),
 	}, nil
 }
 
-type SetTokenWeight struct {
+type UpdateTokenWeight struct {
 	Token  common.Address `json:"token"`
 	Weight uint64         `json:"weight"`
 }
 
-func UnpackIntoSetTokenWeight(data []byte) (*SetTokenWeight, error) {
+func UnpackIntoUpdateTokenWeight(data []byte) (*UpdateTokenWeight, error) {
 	if len(data) != 64 {
-		return nil, fmt.Errorf("SetTokenWeight wrong length: want 64, have %d", len(data))
+		return nil, fmt.Errorf("UpdateTokenWeight wrong length: want 64, have %d", len(data))
 	}
-	return &SetTokenWeight{
+	return &UpdateTokenWeight{
 		Token:  common.BytesToAddress(data[:32]),
 		Weight: new(big.Int).SetBytes(data[32:64]).Uint64(),
 	}, nil
 }
 
-func (d *SetTokenWeight) requestType() byte            { return GoatSetTokenWeight }
-func (d *SetTokenWeight) encode(b *bytes.Buffer) error { return rlp.Encode(b, d) }
-func (d *SetTokenWeight) decode(input []byte) error    { return rlp.DecodeBytes(input, d) }
-func (d *SetTokenWeight) copy() RequestData {
-	return &SetTokenWeight{
+func (d *UpdateTokenWeight) requestType() byte            { return GoatUpdateTokenWeightRequestType }
+func (d *UpdateTokenWeight) encode(b *bytes.Buffer) error { return rlp.Encode(b, d) }
+func (d *UpdateTokenWeight) decode(input []byte) error    { return rlp.DecodeBytes(input, d) }
+func (d *UpdateTokenWeight) copy() RequestData {
+	return &UpdateTokenWeight{
 		Token:  d.Token,
 		Weight: d.Weight,
 	}
 }
 
-type SetTokenThreshold struct {
+//go:generate go run github.com/fjl/gencodec -type UpdateTokenThreshold -field-override updateTokenThresholdMarshaling -out gen_goat_request_update_token_threshold.go
+type UpdateTokenThreshold struct {
 	Token     common.Address `json:"token"`
 	Threshold *big.Int       `json:"threshold"`
 }
 
-func UnpackIntoSetTokenThreshold(data []byte) (*SetTokenThreshold, error) {
+type updateTokenThresholdMarshaling struct {
+	Threshold *hexutil.Big
+}
+
+func UnpackIntoUpdateTokenThreshold(data []byte) (*UpdateTokenThreshold, error) {
 	if len(data) != 64 {
-		return nil, fmt.Errorf("SetTokenThreshold wrong length: want 64, have %d", len(data))
+		return nil, fmt.Errorf("UpdateTokenThreshold wrong length: want 64, have %d", len(data))
 	}
-	return &SetTokenThreshold{
+	return &UpdateTokenThreshold{
 		Token:     common.BytesToAddress(data[:32]),
 		Threshold: new(big.Int).SetBytes(data[32:64]),
 	}, nil
 }
 
-func (d *SetTokenThreshold) requestType() byte            { return GoatSetTokenThreshold }
-func (d *SetTokenThreshold) encode(b *bytes.Buffer) error { return rlp.Encode(b, d) }
-func (d *SetTokenThreshold) decode(input []byte) error    { return rlp.DecodeBytes(input, d) }
-func (d *SetTokenThreshold) copy() RequestData {
-	return &SetTokenThreshold{
+func (d *UpdateTokenThreshold) requestType() byte            { return GoatUpdateTokenThresholdRequestType }
+func (d *UpdateTokenThreshold) encode(b *bytes.Buffer) error { return rlp.Encode(b, d) }
+func (d *UpdateTokenThreshold) decode(input []byte) error    { return rlp.DecodeBytes(input, d) }
+func (d *UpdateTokenThreshold) copy() RequestData {
+	return &UpdateTokenThreshold{
 		Token:     d.Token,
 		Threshold: new(big.Int).Set(d.Threshold),
 	}
@@ -272,13 +277,13 @@ func GetLockingRequests(topics []common.Hash, data []byte) (Requests, error) {
 		}
 		reqs = append(reqs, NewRequest(req))
 	case GoatUpdateTokenWeightTopic:
-		req, err := UnpackIntoSetTokenWeight(data)
+		req, err := UnpackIntoUpdateTokenWeight(data)
 		if err != nil {
 			return nil, err
 		}
 		reqs = append(reqs, NewRequest(req))
 	case GoatUpdateTokenThresholdTopic:
-		req, err := UnpackIntoSetTokenThreshold(data)
+		req, err := UnpackIntoUpdateTokenThreshold(data)
 		if err != nil {
 			return nil, err
 		}

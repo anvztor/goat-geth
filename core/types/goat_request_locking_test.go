@@ -78,13 +78,13 @@ func TestUnpackIntoValidatorLock(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		want    *ValidatorLock
+		want    *GoatLock
 		wantErr bool
 	}{
 		{
 			name: "1",
 			args: args{hexutil.MustDecode("0x0000000000000000000000008945a1288dc78a6d8952a92c77aee6730b4147780000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000a")},
-			want: &ValidatorLock{
+			want: &GoatLock{
 				Validator: common.HexToAddress("0x8945A1288dc78A6D8952a92C77aEe6730B414778"),
 				Token:     common.HexToAddress("0x0000000000000000000000000000000000000000"),
 				Amount:    big.NewInt(10),
@@ -101,7 +101,7 @@ func TestUnpackIntoValidatorLock(t *testing.T) {
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("UnpackIntoValidatorLock() = %v, want %v", got, tt.want)
 			}
-			if got.requestType() != GoatLockType {
+			if got.requestType() != GoatLockRequestType {
 				t.Errorf("UnpackIntoValidatorLock() = not GoatLockType")
 			}
 			if !reflect.DeepEqual(got.copy(), got) {
@@ -118,13 +118,13 @@ func TestUnpackIntoValidatorUnlock(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		want    *ValidatorUnlock
+		want    *GoatUnlock
 		wantErr bool
 	}{
 		{
 			name: "1",
 			args: args{hexutil.MustDecode("0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000008945a1288dc78a6d8952a92c77aee6730b4147780000000000000000000000005b38da6a701c568545dcfcb03fcb875f56beddc40000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000a")},
-			want: &ValidatorUnlock{
+			want: &GoatUnlock{
 				Id:        0,
 				Validator: common.HexToAddress("0x8945A1288dc78A6D8952a92C77aEe6730B414778"),
 				Recipient: common.HexToAddress("0x5B38Da6a701c568545dCfcB03FcB875f56beddC4"),
@@ -143,7 +143,7 @@ func TestUnpackIntoValidatorUnlock(t *testing.T) {
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("UnpackIntoValidatorUnlock() = %v, want %v", got, tt.want)
 			}
-			if got.requestType() != GoatUnlockType {
+			if got.requestType() != GoatUnlockRequestType {
 				t.Errorf("UnpackIntoValidatorUnlock() = not GoatUnlockType")
 			}
 			if !reflect.DeepEqual(got.copy(), got) {
@@ -160,13 +160,13 @@ func TestUnpackIntoGoatRewardClaim(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		want    *GoatRewardClaim
+		want    *GoatClaimReward
 		wantErr bool
 	}{
 		{
 			name: "1",
 			args: args{hexutil.MustDecode("0x00000000000000000000000000000000000000000000000000000000000000010000000000000000000000008945a1288dc78a6d8952a92c77aee6730b4147780000000000000000000000005b38da6a701c568545dcfcb03fcb875f56beddc4")},
-			want: &GoatRewardClaim{
+			want: &GoatClaimReward{
 				Id:        1,
 				Validator: common.HexToAddress("0x8945A1288dc78A6D8952a92C77aEe6730B414778"),
 				Recipient: common.HexToAddress("0x5B38Da6a701c568545dCfcB03FcB875f56beddC4"),
@@ -183,7 +183,7 @@ func TestUnpackIntoGoatRewardClaim(t *testing.T) {
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("UnpackIntoGoatRewardClaim() = %v, want %v", got, tt.want)
 			}
-			if got.requestType() != GoatClaimRewardType {
+			if got.requestType() != GoatClaimRewardRequestType {
 				t.Errorf("UnpackIntoGoatRewardClaim() = not GoatClaimType")
 			}
 			if !reflect.DeepEqual(got.copy(), got) {
@@ -200,13 +200,13 @@ func TestUnpackIntoSetTokenWeight(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		want    *SetTokenWeight
+		want    *UpdateTokenWeight
 		wantErr bool
 	}{
 		{
 			name: "1",
 			args: args{hexutil.MustDecode("0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000a")},
-			want: &SetTokenWeight{
+			want: &UpdateTokenWeight{
 				Token:  common.HexToAddress("0x0000000000000000000000000000000000000000"),
 				Weight: 10,
 			},
@@ -214,7 +214,7 @@ func TestUnpackIntoSetTokenWeight(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := UnpackIntoSetTokenWeight(tt.args.data)
+			got, err := UnpackIntoUpdateTokenWeight(tt.args.data)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("UnpackIntoSetTokenWeight() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -222,7 +222,7 @@ func TestUnpackIntoSetTokenWeight(t *testing.T) {
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("UnpackIntoSetTokenWeight() = %v, want %v", got, tt.want)
 			}
-			if got.requestType() != GoatSetTokenWeight {
+			if got.requestType() != GoatUpdateTokenWeightRequestType {
 				t.Errorf("UnpackIntoSetTokenWeight() = not GoatSetTokenWeight")
 			}
 			if !reflect.DeepEqual(got.copy(), got) {
@@ -239,13 +239,13 @@ func TestUnpackIntoSetTokenThreshold(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		want    *SetTokenThreshold
+		want    *UpdateTokenThreshold
 		wantErr bool
 	}{
 		{
 			name: "1",
 			args: args{hexutil.MustDecode("0x0000000000000000000000005b38da6a701c568545dcfcb03fcb875f56beddc4000000000000000000000000000000000000000000000000000000000000000a")},
-			want: &SetTokenThreshold{
+			want: &UpdateTokenThreshold{
 				Token:     common.HexToAddress("0x5B38Da6a701c568545dCfcB03FcB875f56beddC4"),
 				Threshold: big.NewInt(10),
 			},
@@ -253,7 +253,7 @@ func TestUnpackIntoSetTokenThreshold(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := UnpackIntoSetTokenThreshold(tt.args.data)
+			got, err := UnpackIntoUpdateTokenThreshold(tt.args.data)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("UnpackIntoSetTokenThreshold() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -261,7 +261,7 @@ func TestUnpackIntoSetTokenThreshold(t *testing.T) {
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("UnpackIntoSetTokenThreshold() = %v, want %v", got, tt.want)
 			}
-			if got.requestType() != GoatSetTokenThreshold {
+			if got.requestType() != GoatUpdateTokenThresholdRequestType {
 				t.Errorf("UnpackIntoSetTokenThreshold() = not GoatSetTokenThreshold")
 			}
 			if !reflect.DeepEqual(got.copy(), got) {

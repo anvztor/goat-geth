@@ -512,16 +512,20 @@ func (st *StateTransition) TransitionDb() (*ExecutionResult, error) {
 			st.state.AddBalance(v.Address, amount, tracing.BalanceGoatDepoist)
 		}
 
-		// distribute reward to a validator or a delegator
+		// distribute reward or unlocking amount
 		if v := msg.Claim; v != nil {
 			amount, overflow := uint256.FromBig(v.Amount)
 			if overflow {
-				return nil, fmt.Errorf("goat tx error (amount overflowed to distribute reward: %s)", v.Amount)
+				return nil, fmt.Errorf("goat tx error (amount overflowed to distribute: %s)", v.Amount)
 			}
 
-			// add the reward value to the target
-			log.Debug("NewClaim", "address", v.Address, "amount", amount)
-			st.state.AddBalance(v.Address, amount, tracing.BalanceIncreaseWithdrawal)
+			// the amount in locking contract is from two:
+			// 1. validator locked the amount in the locking contract
+			// 2. gas fee addding in the runtime
+
+			// add the value to the target
+			log.Debug("Distribute", "address", v.Address, "amount", amount)
+			st.state.AddBalance(v.Address, amount, tracing.BalanceChangeTransfer)
 			st.state.SubBalance(goattypes.LockingContract, amount, tracing.BalanceChangeTransfer)
 		}
 

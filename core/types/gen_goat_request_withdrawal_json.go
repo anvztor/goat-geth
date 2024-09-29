@@ -8,47 +8,47 @@ import (
 	"github.com/ethereum/go-ethereum/common/hexutil"
 )
 
-var _ = (*bridgeWithdrawMarshaling)(nil)
+var _ = (*goatWithdrawMarshaling)(nil)
 
 // MarshalJSON marshals as JSON.
-func (b BridgeWithdrawal) MarshalJSON() ([]byte, error) {
-	type BridgeWithdrawal struct {
+func (g GoatWithdrawal) MarshalJSON() ([]byte, error) {
+	type GoatWithdrawal struct {
 		Id         hexutil.Uint64 `json:"id"`
 		Amount     hexutil.Uint64 `json:"amount_in_satoshi"`
 		MaxTxPrice hexutil.Uint64 `json:"max_tx_price"`
 		Address    string         `json:"address"`
 	}
-	var enc BridgeWithdrawal
-	enc.Id = hexutil.Uint64(b.Id)
-	enc.Amount = hexutil.Uint64(b.Amount)
-	enc.MaxTxPrice = hexutil.Uint64(b.MaxTxPrice)
-	enc.Address = b.Address
+	var enc GoatWithdrawal
+	enc.Id = hexutil.Uint64(g.Id)
+	enc.Amount = hexutil.Uint64(g.Amount)
+	enc.MaxTxPrice = hexutil.Uint64(g.MaxTxPrice)
+	enc.Address = g.Address
 	return json.Marshal(&enc)
 }
 
 // UnmarshalJSON unmarshals from JSON.
-func (b *BridgeWithdrawal) UnmarshalJSON(input []byte) error {
-	type BridgeWithdrawal struct {
+func (g *GoatWithdrawal) UnmarshalJSON(input []byte) error {
+	type GoatWithdrawal struct {
 		Id         *hexutil.Uint64 `json:"id"`
 		Amount     *hexutil.Uint64 `json:"amount_in_satoshi"`
 		MaxTxPrice *hexutil.Uint64 `json:"max_tx_price"`
 		Address    *string         `json:"address"`
 	}
-	var dec BridgeWithdrawal
+	var dec GoatWithdrawal
 	if err := json.Unmarshal(input, &dec); err != nil {
 		return err
 	}
 	if dec.Id != nil {
-		b.Id = uint64(*dec.Id)
+		g.Id = uint64(*dec.Id)
 	}
 	if dec.Amount != nil {
-		b.Amount = uint64(*dec.Amount)
+		g.Amount = uint64(*dec.Amount)
 	}
 	if dec.MaxTxPrice != nil {
-		b.MaxTxPrice = uint64(*dec.MaxTxPrice)
+		g.MaxTxPrice = uint64(*dec.MaxTxPrice)
 	}
 	if dec.Address != nil {
-		b.Address = *dec.Address
+		g.Address = *dec.Address
 	}
 	return nil
 }

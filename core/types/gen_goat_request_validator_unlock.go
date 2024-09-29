@@ -10,53 +10,53 @@ import (
 	"github.com/ethereum/go-ethereum/common/hexutil"
 )
 
-var _ = (*validatorUnlockMarshaling)(nil)
+var _ = (*goatUnlockMarshaling)(nil)
 
 // MarshalJSON marshals as JSON.
-func (v ValidatorUnlock) MarshalJSON() ([]byte, error) {
-	type ValidatorUnlock struct {
+func (g GoatUnlock) MarshalJSON() ([]byte, error) {
+	type GoatUnlock struct {
 		Id        hexutil.Uint64 `json:"id"`
 		Validator common.Address `json:"validator"`
 		Token     common.Address `json:"token"`
 		Recipient common.Address `json:"recipient"`
 		Amount    *hexutil.Big   `json:"amount"`
 	}
-	var enc ValidatorUnlock
-	enc.Id = hexutil.Uint64(v.Id)
-	enc.Validator = v.Validator
-	enc.Token = v.Token
-	enc.Recipient = v.Recipient
-	enc.Amount = (*hexutil.Big)(v.Amount)
+	var enc GoatUnlock
+	enc.Id = hexutil.Uint64(g.Id)
+	enc.Validator = g.Validator
+	enc.Token = g.Token
+	enc.Recipient = g.Recipient
+	enc.Amount = (*hexutil.Big)(g.Amount)
 	return json.Marshal(&enc)
 }
 
 // UnmarshalJSON unmarshals from JSON.
-func (v *ValidatorUnlock) UnmarshalJSON(input []byte) error {
-	type ValidatorUnlock struct {
+func (g *GoatUnlock) UnmarshalJSON(input []byte) error {
+	type GoatUnlock struct {
 		Id        *hexutil.Uint64 `json:"id"`
 		Validator *common.Address `json:"validator"`
 		Token     *common.Address `json:"token"`
 		Recipient *common.Address `json:"recipient"`
 		Amount    *hexutil.Big    `json:"amount"`
 	}
-	var dec ValidatorUnlock
+	var dec GoatUnlock
 	if err := json.Unmarshal(input, &dec); err != nil {
 		return err
 	}
 	if dec.Id != nil {
-		v.Id = uint64(*dec.Id)
+		g.Id = uint64(*dec.Id)
 	}
 	if dec.Validator != nil {
-		v.Validator = *dec.Validator
+		g.Validator = *dec.Validator
 	}
 	if dec.Token != nil {
-		v.Token = *dec.Token
+		g.Token = *dec.Token
 	}
 	if dec.Recipient != nil {
-		v.Recipient = *dec.Recipient
+		g.Recipient = *dec.Recipient
 	}
 	if dec.Amount != nil {
-		v.Amount = (*big.Int)(dec.Amount)
+		g.Amount = (*big.Int)(dec.Amount)
 	}
 	return nil
 }

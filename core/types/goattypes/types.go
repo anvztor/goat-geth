@@ -46,8 +46,8 @@ func TxDecode(module Module, action Action, data []byte) (Tx, error) {
 			inner = new(Cancel2Tx)
 		case BridgePaidAction:
 			inner = new(PaidTx)
-		case BitcoinNewHashAction:
-			inner = new(AppendBitcoinHash)
+		case BitcoinNewBlockAction:
+			inner = new(NewBitcoinBlock)
 		}
 	case LockingModule:
 		switch action {

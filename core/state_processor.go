@@ -119,7 +119,7 @@ func (p *StateProcessor) Process(block *types.Block, statedb *state.StateDB, cfg
 			burntFees.Add(burntFees, blobUsed.Mul(blobUsed, context.BlobBaseFee))
 		}
 		gasReward.Add(gasReward, burntFees)
-		reward := ProcessGoatFoundationReward(statedb, gasReward)
+		reward := ProcessGoatGasFee(statedb, gasReward)
 		requests, err = ProcessGoatRequests(reward, allLogs, p.config)
 		if err != nil {
 			return nil, err

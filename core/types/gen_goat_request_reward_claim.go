@@ -12,13 +12,13 @@ import (
 var _ = (*goatRewardClaimMarshaling)(nil)
 
 // MarshalJSON marshals as JSON.
-func (g GoatRewardClaim) MarshalJSON() ([]byte, error) {
-	type GoatRewardClaim struct {
+func (g GoatClaimReward) MarshalJSON() ([]byte, error) {
+	type GoatClaimReward struct {
 		Id        hexutil.Uint64 `json:"id"`
 		Validator common.Address `json:"validator"`
 		Recipient common.Address `json:"recipient"`
 	}
-	var enc GoatRewardClaim
+	var enc GoatClaimReward
 	enc.Id = hexutil.Uint64(g.Id)
 	enc.Validator = g.Validator
 	enc.Recipient = g.Recipient
@@ -26,13 +26,13 @@ func (g GoatRewardClaim) MarshalJSON() ([]byte, error) {
 }
 
 // UnmarshalJSON unmarshals from JSON.
-func (g *GoatRewardClaim) UnmarshalJSON(input []byte) error {
-	type GoatRewardClaim struct {
+func (g *GoatClaimReward) UnmarshalJSON(input []byte) error {
+	type GoatClaimReward struct {
 		Id        *hexutil.Uint64 `json:"id"`
 		Validator *common.Address `json:"validator"`
 		Recipient *common.Address `json:"recipient"`
 	}
-	var dec GoatRewardClaim
+	var dec GoatClaimReward
 	if err := json.Unmarshal(input, &dec); err != nil {
 		return err
 	}

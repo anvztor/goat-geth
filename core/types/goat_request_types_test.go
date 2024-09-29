@@ -55,7 +55,7 @@ func TestRequest_JSONCodec(t *testing.T) {
 		},
 		{
 			name:   "BridgeWithdrawal",
-			fields: NewRequest(&BridgeWithdrawal{Address: "15mySWA5Gq3xvHBhMdMQtgWV7Rd9aZdf9G"}),
+			fields: NewRequest(&GoatWithdrawal{Address: "15mySWA5Gq3xvHBhMdMQtgWV7Rd9aZdf9G"}),
 		},
 		{
 			name:   "ReplaceByFee",

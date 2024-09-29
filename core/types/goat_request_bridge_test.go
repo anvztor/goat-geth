@@ -16,7 +16,7 @@ func TestUnpackIntoBridgeWithdraw(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		want    *BridgeWithdrawal
+		want    *GoatWithdrawal
 		wantErr bool
 	}{
 		{
@@ -29,7 +29,7 @@ func TestUnpackIntoBridgeWithdraw(t *testing.T) {
 				},
 				data: hexutil.MustDecode("0x000000000000000000000000000000000000000000000000000000174876e800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000003e62633171656e356b76336330657064397966717675327130353971736a7077753968646a797778327639703570396c386d73786e383866733979356b78360000"),
 			},
-			want: &BridgeWithdrawal{
+			want: &GoatWithdrawal{
 				Id:         100,
 				Amount:     10,
 				MaxTxPrice: 1,
@@ -46,7 +46,7 @@ func TestUnpackIntoBridgeWithdraw(t *testing.T) {
 				},
 				data: hexutil.MustDecode("0x0000000000000000000000000000000000000000000000000000002e90edd00000000000000000000000000000000000000000000000000000000000000003e8000000000000000000000000000000000000000000000000000000000000000a0000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000002a626331716d76733230387765336a67376867637a686c683765397566773033346b666d3276777376676500000000000000000000000000000000000000000000"),
 			},
-			want: &BridgeWithdrawal{
+			want: &GoatWithdrawal{
 				Id:         1,
 				Amount:     20,
 				MaxTxPrice: 10,
@@ -56,7 +56,7 @@ func TestUnpackIntoBridgeWithdraw(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := UnpackIntoBridgeWithdraw(tt.args.topics, tt.args.data)
+			got, err := UnpackIntoGoatWithdraw(tt.args.topics, tt.args.data)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("UnpackIntoBridgeWithdraw() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -80,7 +80,7 @@ func TestUnpackIntoBridgeWithdraw(t *testing.T) {
 				return
 			}
 
-			ty, ok := reqs[0].inner.(*BridgeWithdrawal)
+			ty, ok := reqs[0].inner.(*GoatWithdrawal)
 			if !ok {
 				t.Errorf("UnpackIntoBridgeWithdraw(): GetBridgeRequests not BridgeWithdrawal")
 				return

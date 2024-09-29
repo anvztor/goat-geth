@@ -59,7 +59,7 @@ func (tx *CompleteUnlock) Encode() []byte {
 
 func (tx *CompleteUnlock) Decode(input []byte) error {
 	if len(input) != tx.Size() {
-		return errors.New("Invalid input data for CompleteUnlock tx")
+		return errors.New("invalid input data for completeUnlock tx")
 	}
 
 	if [4]byte(input[:4]) != tx.MethodId() {
@@ -98,7 +98,7 @@ type DistributeReward struct {
 	Id        uint64
 	Recipient common.Address
 	Goat      *big.Int
-	Amount    *big.Int
+	GasReward *big.Int
 }
 
 func (tx *DistributeReward) isGoatTx() {}
@@ -108,7 +108,7 @@ func (tx *DistributeReward) Copy() Tx {
 		Id:        tx.Id,
 		Recipient: tx.Recipient,
 		Goat:      new(big.Int).Set(tx.Goat),
-		Amount:    new(big.Int).Set(tx.Amount),
+		GasReward: new(big.Int).Set(tx.GasReward),
 	}
 }
 
@@ -133,14 +133,14 @@ func (tx *DistributeReward) Encode() []byte {
 
 	b = append(b, common.LeftPadBytes(tx.Recipient[:], 32)...)
 	b = append(b, tx.Goat.FillBytes(make([]byte, 32))...)
-	b = append(b, tx.Amount.FillBytes(make([]byte, 32))...)
+	b = append(b, tx.GasReward.FillBytes(make([]byte, 32))...)
 
 	return b
 }
 
 func (tx *DistributeReward) Decode(input []byte) error {
 	if len(input) != tx.Size() {
-		return errors.New("Invalid input data for DistributeReward tx")
+		return errors.New("invalid input data for distributeReward tx")
 	}
 
 	if [4]byte(input[:4]) != tx.MethodId() {
@@ -153,7 +153,7 @@ func (tx *DistributeReward) Decode(input []byte) error {
 	tx.Recipient = common.BytesToAddress(input[:32])
 	input = input[32:]
 	tx.Goat = new(big.Int).SetBytes(input[:32])
-	tx.Amount = new(big.Int).SetBytes(input[32:])
+	tx.GasReward = new(big.Int).SetBytes(input[32:])
 	return nil
 }
 
@@ -170,5 +170,5 @@ func (tx *DistributeReward) Deposit() *Mint {
 }
 
 func (tx *DistributeReward) Claim() *Mint {
-	return &Mint{tx.Recipient, new(big.Int).Set(tx.Amount)}
+	return &Mint{tx.Recipient, new(big.Int).Set(tx.GasReward)}
 }

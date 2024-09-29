@@ -82,12 +82,12 @@ type ExecutableData struct {
 	ExecutionWitness *types.ExecutionWitness `json:"executionWitness,omitempty"`
 
 	// goat requests
-	GasRevenues       types.GasRevenues       `json:"gasRevenueRequests"`
-	AddVoters         types.AddVoters         `json:"addVoterRequests"`
-	RemoveVoters      types.RemoveVoters      `json:"removeVoterRequests"`
-	BridgeWithdrawals types.BridgeWithdrawals `json:"bridgeWithdrawalsRequests"`
-	ReplaceByFees     types.ReplaceByFees     `json:"rbfRequests"`
-	Cancel1s          types.Cancel1s          `json:"cancel1Requests"`
+	GasRevenues       types.GasRevenues     `json:"gasRevenueRequests"`
+	AddVoters         types.AddVoters       `json:"addVoterRequests"`
+	RemoveVoters      types.RemoveVoters    `json:"removeVoterRequests"`
+	BridgeWithdrawals types.GoatWithdrawals `json:"bridgeWithdrawalsRequests"`
+	ReplaceByFees     types.ReplaceByFees   `json:"rbfRequests"`
+	Cancel1s          types.Cancel1s        `json:"cancel1Requests"`
 }
 
 // JSON type overrides for executableData.
@@ -383,7 +383,7 @@ func setRequests(requests types.Requests, data *ExecutableData) {
 		data.GasRevenues = make(types.GasRevenues, 0)
 		data.AddVoters = make(types.AddVoters, 0)
 		data.RemoveVoters = make(types.RemoveVoters, 0)
-		data.BridgeWithdrawals = make(types.BridgeWithdrawals, 0)
+		data.BridgeWithdrawals = make(types.GoatWithdrawals, 0)
 		data.ReplaceByFees = make(types.ReplaceByFees, 0)
 		data.Cancel1s = make(types.Cancel1s, 0)
 	}
@@ -399,7 +399,7 @@ func setRequests(requests types.Requests, data *ExecutableData) {
 			data.AddVoters = append(data.AddVoters, v)
 		case *types.RemoveVoter:
 			data.RemoveVoters = append(data.RemoveVoters, v)
-		case *types.BridgeWithdrawal:
+		case *types.GoatWithdrawal:
 			data.BridgeWithdrawals = append(data.BridgeWithdrawals, v)
 		case *types.ReplaceByFee:
 			data.ReplaceByFees = append(data.ReplaceByFees, v)
@@ -416,12 +416,12 @@ type ExecutionPayloadBody struct {
 	Deposits        types.Deposits      `json:"depositRequests"`
 
 	// goat requests
-	GasRevenues       types.GasRevenues       `json:"gasRevenuesRequest"`
-	AddVoters         types.AddVoters         `json:"addVoterRequests"`
-	RemoveVoters      types.RemoveVoters      `json:"removeVoterRequests"`
-	BridgeWithdrawals types.BridgeWithdrawals `json:"bridgeWithdrawalsRequests"`
-	ReplaceByFees     types.ReplaceByFees     `json:"rbfRequests"`
-	Cancel1s          types.Cancel1s          `json:"cancel1Requests"`
+	GasRevenues       types.GasRevenues     `json:"gasRevenuesRequest"`
+	AddVoters         types.AddVoters       `json:"addVoterRequests"`
+	RemoveVoters      types.RemoveVoters    `json:"removeVoterRequests"`
+	BridgeWithdrawals types.GoatWithdrawals `json:"bridgeWithdrawalsRequests"`
+	ReplaceByFees     types.ReplaceByFees   `json:"rbfRequests"`
+	Cancel1s          types.Cancel1s        `json:"cancel1Requests"`
 }
 
 // Client identifiers to support ClientVersionV1.

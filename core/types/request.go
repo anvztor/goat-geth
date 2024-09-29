@@ -155,23 +155,23 @@ func (r *Request) decode(b []byte) (RequestData, error) {
 	case GoatRemoveVoterRequestType:
 		inner = new(RemoveVoter)
 	case GoatWithdrawalRequestType:
-		inner = new(BridgeWithdrawal)
+		inner = new(GoatWithdrawal)
 	case GoatReplaceByFeeRequestType:
 		inner = new(ReplaceByFee)
 	case GoatCancel1RequestType:
 		inner = new(ReplaceByFee)
 	case GoatCreateValidatorType:
 		r.inner = new(CreateValidator)
-	case GoatLockType:
-		r.inner = new(ValidatorLock)
-	case GoatUnlockType:
-		r.inner = new(ValidatorUnlock)
-	case GoatClaimRewardType:
-		r.inner = new(GoatRewardClaim)
-	case GoatSetTokenWeight:
-		r.inner = new(SetTokenWeight)
-	case GoatSetTokenThreshold:
-		r.inner = new(SetTokenThreshold)
+	case GoatLockRequestType:
+		r.inner = new(GoatLock)
+	case GoatUnlockRequestType:
+		r.inner = new(GoatUnlock)
+	case GoatClaimRewardRequestType:
+		r.inner = new(GoatClaimReward)
+	case GoatUpdateTokenWeightRequestType:
+		r.inner = new(UpdateTokenWeight)
+	case GoatUpdateTokenThresholdRequestType:
+		r.inner = new(UpdateTokenThreshold)
 
 	case DepositRequestType:
 		inner = new(Deposit)

@@ -232,7 +232,7 @@ func TestAppendBitcoinHash_Encode(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tx := &AppendBitcoinHash{
+			tx := &NewBitcoinBlock{
 				Hash: tt.fields.Hash,
 			}
 			if got := tx.Encode(); !reflect.DeepEqual(got, tt.want) {
@@ -248,7 +248,7 @@ func TestAppendBitcoinHash_Encode(t *testing.T) {
 				t.Errorf("AppendBitcoinHash.Encode() = %v, want %v", got, tt.want)
 			}
 
-			rev := new(AppendBitcoinHash)
+			rev := new(NewBitcoinBlock)
 			if err := rev.Decode(got); err != nil {
 				t.Errorf("AppendBitcoinHash.Decode(): %s", err)
 			}

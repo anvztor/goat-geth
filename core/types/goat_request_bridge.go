@@ -11,15 +11,15 @@ import (
 	"github.com/ethereum/go-ethereum/rlp"
 )
 
-//go:generate go run github.com/fjl/gencodec -type BridgeWithdrawal -field-override bridgeWithdrawMarshaling -out gen_goat_request_withdrawal_json.go
-type BridgeWithdrawal struct {
+//go:generate go run github.com/fjl/gencodec -type GoatWithdrawal -field-override goatWithdrawMarshaling -out gen_goat_request_withdrawal_json.go
+type GoatWithdrawal struct {
 	Id         uint64 `json:"id"`
 	Amount     uint64 `json:"amount_in_satoshi"`
 	MaxTxPrice uint64 `json:"max_tx_price"`
 	Address    string `json:"address"`
 }
 
-type bridgeWithdrawMarshaling struct {
+type goatWithdrawMarshaling struct {
 	Id         hexutil.Uint64
 	Amount     hexutil.Uint64
 	MaxTxPrice hexutil.Uint64
@@ -31,13 +31,13 @@ var (
 	satoshi                   = big.NewInt(1e10)
 )
 
-func UnpackIntoBridgeWithdraw(topics []common.Hash, data []byte) (*BridgeWithdrawal, error) {
+func UnpackIntoGoatWithdraw(topics []common.Hash, data []byte) (*GoatWithdrawal, error) {
 	if len(topics) != 3 {
-		return nil, fmt.Errorf("invalid Withdraw event topics length: expect 3 got %d", len(topics))
+		return nil, fmt.Errorf("invalid withdraw event topics length: expect 3 got %d", len(topics))
 	}
 
 	if len(data) < 192 {
-		return nil, fmt.Errorf("invalid Withdraw event data length: %d", len(data))
+		return nil, fmt.Errorf("invalid withdraw event data length: %d", len(data))
 	}
 
 	id := new(big.Int).SetBytes(topics[1][:])
@@ -62,7 +62,7 @@ func UnpackIntoBridgeWithdraw(topics []common.Hash, data []byte) (*BridgeWithdra
 
 	// receiver
 	if addrLoc := new(big.Int).SetBytes(data[96:128]); addrLoc.Cmp(withdrawalAddressLocation) != 0 {
-		return nil, fmt.Errorf("address location should be 128 but goat %d", addrLoc)
+		return nil, fmt.Errorf("address location in the withdraw event should be 128 but goat %d", addrLoc)
 	}
 
 	addrLen := new(big.Int).SetBytes(data[128:160]) // length
@@ -75,7 +75,7 @@ func UnpackIntoBridgeWithdraw(topics []common.Hash, data []byte) (*BridgeWithdra
 		return nil, errors.New("address slice is out of range")
 	}
 
-	return &BridgeWithdrawal{
+	return &GoatWithdrawal{
 		Id:         id.Uint64(),
 		Amount:     amount.Uint64(),
 		MaxTxPrice: maxTxPrice.Uint64(),
@@ -83,28 +83,28 @@ func UnpackIntoBridgeWithdraw(topics []common.Hash, data []byte) (*BridgeWithdra
 	}, nil
 }
 
-type BridgeWithdrawals []*BridgeWithdrawal
+type GoatWithdrawals []*GoatWithdrawal
 
-func (s BridgeWithdrawals) Len() int { return len(s) }
+func (s GoatWithdrawals) Len() int { return len(s) }
 
-func (s BridgeWithdrawals) EncodeIndex(i int, w *bytes.Buffer) {
+func (s GoatWithdrawals) EncodeIndex(i int, w *bytes.Buffer) {
 	rlp.Encode(w, s[i])
 }
 
 // Requests creates a deep copy of each deposit and returns a slice of the
 // BridgeWithdrawals requests as Request objects.
-func (s BridgeWithdrawals) Requests() (reqs Requests) {
+func (s GoatWithdrawals) Requests() (reqs Requests) {
 	for _, d := range s {
 		reqs = append(reqs, NewRequest(d))
 	}
 	return
 }
 
-func (d *BridgeWithdrawal) requestType() byte            { return GoatWithdrawalRequestType }
-func (d *BridgeWithdrawal) encode(b *bytes.Buffer) error { return rlp.Encode(b, d) }
-func (d *BridgeWithdrawal) decode(input []byte) error    { return rlp.DecodeBytes(input, d) }
-func (d *BridgeWithdrawal) copy() RequestData {
-	return &BridgeWithdrawal{
+func (d *GoatWithdrawal) requestType() byte            { return GoatWithdrawalRequestType }
+func (d *GoatWithdrawal) encode(b *bytes.Buffer) error { return rlp.Encode(b, d) }
+func (d *GoatWithdrawal) decode(input []byte) error    { return rlp.DecodeBytes(input, d) }
+func (d *GoatWithdrawal) copy() RequestData {
+	return &GoatWithdrawal{
 		Id:         d.Id,
 		Amount:     d.Amount,
 		MaxTxPrice: d.MaxTxPrice,
@@ -243,7 +243,7 @@ func GetBridgeRequests(topics []common.Hash, data []byte) (Requests, error) {
 	var reqs Requests
 	switch topics[0] {
 	case GoatWithdrawalTopic:
-		req, err := UnpackIntoBridgeWithdraw(topics, data)
+		req, err := UnpackIntoGoatWithdraw(topics, data)
 		if err != nil {
 			return nil, err
 		}

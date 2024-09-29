@@ -39,7 +39,7 @@ func (e ExecutableData) MarshalJSON() ([]byte, error) {
 		GasRevenues       types.GasRevenues       `json:"gasRevenueRequests"`
 		AddVoters         types.AddVoters         `json:"addVoterRequests"`
 		RemoveVoters      types.RemoveVoters      `json:"removeVoterRequests"`
-		BridgeWithdrawals types.BridgeWithdrawals `json:"bridgeWithdrawalsRequests"`
+		BridgeWithdrawals types.GoatWithdrawals `json:"bridgeWithdrawalsRequests"`
 		ReplaceByFees     types.ReplaceByFees     `json:"rbfRequests"`
 		Cancel1s          types.Cancel1s          `json:"cancel1Requests"`
 	}
@@ -102,7 +102,7 @@ func (e *ExecutableData) UnmarshalJSON(input []byte) error {
 		GasRevenues       *types.GasRevenues       `json:"gasRevenueRequests"`
 		AddVoters         *types.AddVoters         `json:"addVoterRequests"`
 		RemoveVoters      *types.RemoveVoters      `json:"removeVoterRequests"`
-		BridgeWithdrawals *types.BridgeWithdrawals `json:"bridgeWithdrawalsRequests"`
+		BridgeWithdrawals *types.GoatWithdrawals `json:"bridgeWithdrawalsRequests"`
 		ReplaceByFees     *types.ReplaceByFees     `json:"rbfRequests"`
 		Cancel1s          *types.Cancel1s          `json:"cancel1Requests"`
 	}

@@ -1298,7 +1298,7 @@ func getBody(block *types.Block) *engine.ExecutionPayloadBody {
 		gasRevenueRequests       types.GasRevenues
 		addVoterRequests         types.AddVoters
 		removeVoterRequests      types.RemoveVoters
-		bridgeWithdrawalRequests types.BridgeWithdrawals
+		bridgeWithdrawalRequests types.GoatWithdrawals
 		replaceByFeeRequests     types.ReplaceByFees
 		cancel1Requests          types.Cancel1s
 	)
@@ -1324,7 +1324,7 @@ func getBody(block *types.Block) *engine.ExecutionPayloadBody {
 				addVoterRequests = append(addVoterRequests, v)
 			case *types.RemoveVoter:
 				removeVoterRequests = append(removeVoterRequests, v)
-			case *types.BridgeWithdrawal:
+			case *types.GoatWithdrawal:
 				bridgeWithdrawalRequests = append(bridgeWithdrawalRequests, v)
 			case *types.ReplaceByFee:
 				replaceByFeeRequests = append(replaceByFeeRequests, v)

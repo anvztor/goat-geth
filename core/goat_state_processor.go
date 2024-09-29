@@ -16,7 +16,7 @@ var (
 	gfMaxBasePoint = big.NewInt(1e4)
 )
 
-func ProcessGoatFoundationReward(statedb *state.StateDB, gasFees *big.Int) *big.Int {
+func ProcessGoatGasFee(statedb *state.StateDB, gasFees *big.Int) *big.Int {
 	if gasFees.BitLen() == 0 {
 		return new(big.Int)
 	}
@@ -31,6 +31,7 @@ func ProcessGoatFoundationReward(statedb *state.StateDB, gasFees *big.Int) *big.
 	}
 
 	// add gas revenue to locking contract
+	// if the validator withdraws the gas reward, we will subtract it from locking contract then
 	gas := new(big.Int).Sub(gasFees, tax)
 	if gas.BitLen() != 0 {
 		f, _ := uint256.FromBig(gas)
@@ -44,12 +45,6 @@ func ProcessGoatRequests(reward *big.Int, logs []*types.Log, config *params.Chai
 	requests = append(requests, types.NewRequest(types.NewGoatGasRevenue(reward)))
 	for _, log := range logs {
 		switch log.Address {
-		case goattypes.RelayerContract:
-			reqs, err := types.GetRelayerRequests(log.Topics, log.Data)
-			if err != nil {
-				return nil, err
-			}
-			requests = append(requests, reqs...)
 		case goattypes.BridgeContract:
 			reqs, err := types.GetBridgeRequests(log.Topics, log.Data)
 			if err != nil {
@@ -58,6 +53,12 @@ func ProcessGoatRequests(reward *big.Int, logs []*types.Log, config *params.Chai
 			requests = append(requests, reqs...)
 		case goattypes.LockingContract:
 			reqs, err := types.GetLockingRequests(log.Topics, log.Data)
+			if err != nil {
+				return nil, err
+			}
+			requests = append(requests, reqs...)
+		case goattypes.RelayerContract:
+			reqs, err := types.GetRelayerRequests(log.Topics, log.Data)
 			if err != nil {
 				return nil, err
 			}

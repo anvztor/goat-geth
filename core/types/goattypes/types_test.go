@@ -107,10 +107,10 @@ func TestTxDecode(t *testing.T) {
 			name: "new-btc-hash",
 			args: args{
 				module: BirdgeModule,
-				action: BitcoinNewHashAction,
+				action: BitcoinNewBlockAction,
 				data:   hexutil.MustDecode("0x94f490bdbb7ba5e4830730dfa97c1eaaf199a8ef8ea2a865ca44c600fa032772a7af9edc"),
 			},
-			want: &AppendBitcoinHash{
+			want: &NewBitcoinBlock{
 				Hash: common.HexToHash("0xbb7ba5e4830730dfa97c1eaaf199a8ef8ea2a865ca44c600fa032772a7af9edc"),
 			},
 		},
@@ -139,7 +139,7 @@ func TestTxDecode(t *testing.T) {
 				Id:        2,
 				Recipient: common.HexToAddress("0x9ae387acdafe4b9d315d0bb56b06ab91f31b9670"),
 				Goat:      big.NewInt(1),
-				Amount:    big.NewInt(100),
+				GasReward: big.NewInt(100),
 			},
 		},
 	}

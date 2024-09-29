@@ -12,7 +12,7 @@ const (
 	BridgeDepoitAction = iota + 1
 	BridgeCancel2Action
 	BridgePaidAction
-	BitcoinNewHashAction
+	BitcoinNewBlockAction
 )
 
 type DepositTx struct {
@@ -195,7 +195,7 @@ func (tx *PaidTx) Encode() []byte {
 
 func (tx *PaidTx) Decode(input []byte) error {
 	if len(input) != tx.Size() {
-		return errors.New("Invalid input data for deposit tx")
+		return errors.New("Invalid input data for paid tx")
 	}
 
 	if [4]byte(input[:4]) != tx.MethodId() {
@@ -235,21 +235,21 @@ func (tx *PaidTx) MethodId() [4]byte {
 	return [4]byte{0xb6, 0x70, 0xab, 0x5e}
 }
 
-type AppendBitcoinHash struct {
+type NewBitcoinBlock struct {
 	Hash common.Hash
 }
 
-func (tx *AppendBitcoinHash) Size() int {
+func (tx *NewBitcoinBlock) Size() int {
 	return 36
 }
 
-func (tx *AppendBitcoinHash) isGoatTx() {}
+func (tx *NewBitcoinBlock) isGoatTx() {}
 
-func (tx *AppendBitcoinHash) Copy() Tx {
-	return &AppendBitcoinHash{Hash: tx.Hash}
+func (tx *NewBitcoinBlock) Copy() Tx {
+	return &NewBitcoinBlock{Hash: tx.Hash}
 }
 
-func (tx *AppendBitcoinHash) Encode() []byte {
+func (tx *NewBitcoinBlock) Encode() []byte {
 	b := make([]byte, 0, tx.Size())
 
 	method := tx.MethodId()
@@ -258,9 +258,9 @@ func (tx *AppendBitcoinHash) Encode() []byte {
 	return b
 }
 
-func (tx *AppendBitcoinHash) Decode(input []byte) error {
+func (tx *NewBitcoinBlock) Decode(input []byte) error {
 	if len(input) != tx.Size() {
-		return errors.New("Invalid input data for deposit tx")
+		return errors.New("Invalid input data for newBitcoinHash tx")
 	}
 	if [4]byte(input[:4]) != tx.MethodId() {
 		return errors.New("not a paid tx")
@@ -269,23 +269,23 @@ func (tx *AppendBitcoinHash) Decode(input []byte) error {
 	return nil
 }
 
-func (tx *AppendBitcoinHash) Sender() common.Address {
+func (tx *NewBitcoinBlock) Sender() common.Address {
 	return RelayerExecutor
 }
 
-func (tx *AppendBitcoinHash) Contract() common.Address {
+func (tx *NewBitcoinBlock) Contract() common.Address {
 	return BitcoinContract
 }
 
-func (tx *AppendBitcoinHash) Deposit() *Mint {
+func (tx *NewBitcoinBlock) Deposit() *Mint {
 	return nil
 }
 
-func (tx *AppendBitcoinHash) Claim() *Mint {
+func (tx *NewBitcoinBlock) Claim() *Mint {
 	return nil
 }
 
-func (tx *AppendBitcoinHash) MethodId() [4]byte {
+func (tx *NewBitcoinBlock) MethodId() [4]byte {
 	// newBlockHash(bytes32 _hash)
 	return [4]byte{0x94, 0xf4, 0x90, 0xbd}
 }

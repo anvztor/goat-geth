@@ -13,16 +13,16 @@ const (
 	GoatReplaceByFeeRequestType
 	GoatCancel1RequestType
 	GoatCreateValidatorType
-	GoatLockType
-	GoatUnlockType
-	GoatClaimRewardType
-	GoatSetTokenWeight
-	GoatSetTokenThreshold
+	GoatLockRequestType
+	GoatUnlockRequestType
+	GoatClaimRewardRequestType
+	GoatUpdateTokenWeightRequestType
+	GoatUpdateTokenThresholdRequestType
 )
 
 func (r *Request) ForGoat() bool {
 	t := r.inner.requestType()
-	return t >= GoatGasRevenueRequestType && t <= GoatSetTokenThreshold
+	return t >= GoatGasRevenueRequestType && t <= GoatUpdateTokenThresholdRequestType
 }
 
 // Request intermediate type for json codec
@@ -60,23 +60,23 @@ func (r *Request) UnmarshalJSON(b []byte) error {
 	case GoatRemoveVoterRequestType:
 		r.inner = new(RemoveVoter)
 	case GoatWithdrawalRequestType:
-		r.inner = new(BridgeWithdrawal)
+		r.inner = new(GoatWithdrawal)
 	case GoatReplaceByFeeRequestType:
 		r.inner = new(ReplaceByFee)
 	case GoatCancel1RequestType:
 		r.inner = new(Cancel1)
 	case GoatCreateValidatorType:
 		r.inner = new(CreateValidator)
-	case GoatLockType:
-		r.inner = new(ValidatorLock)
-	case GoatUnlockType:
-		r.inner = new(ValidatorUnlock)
-	case GoatClaimRewardType:
-		r.inner = new(GoatRewardClaim)
-	case GoatSetTokenWeight:
-		r.inner = new(SetTokenWeight)
-	case GoatSetTokenThreshold:
-		r.inner = new(SetTokenThreshold)
+	case GoatLockRequestType:
+		r.inner = new(GoatLock)
+	case GoatUnlockRequestType:
+		r.inner = new(GoatUnlock)
+	case GoatClaimRewardRequestType:
+		r.inner = new(GoatClaimReward)
+	case GoatUpdateTokenWeightRequestType:
+		r.inner = new(UpdateTokenWeight)
+	case GoatUpdateTokenThresholdRequestType:
+		r.inner = new(UpdateTokenThreshold)
 
 	case DepositRequestType:
 		r.inner = new(Deposit)

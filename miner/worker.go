@@ -144,7 +144,7 @@ func (miner *Miner) generateWork(params *generateParams, witness bool) *newPaylo
 			minerFee, _ := tx.EffectiveGasTip(work.header.BaseFee)
 			gasFees.Add(gasFees, new(big.Int).Mul(new(big.Int).SetUint64(gasUsed), minerFee))
 		}
-		gasRevenue := core.ProcessGoatFoundationReward(work.state, gasFees)
+		gasRevenue := core.ProcessGoatGasFee(work.state, gasFees)
 		requests, err := core.ProcessGoatRequests(gasRevenue, allLogs, miner.chainConfig)
 		if err != nil {
 			return &newPayloadResult{err: err}
